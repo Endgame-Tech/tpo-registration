@@ -38,7 +38,7 @@ type ImageProps = {
 
 
 
-export function CardImage({ src, alt, fallbackSrc, bucketName, className = "", width, height }: ImageProps) {
+export function CardImage({ src, fallbackSrc, bucketName, className = "" }: ImageProps) {
   const [imageSrc, setImageSrc] = React.useState<string | null>(null);
 
   useEffect(() => {
@@ -75,19 +75,6 @@ export function CardImage({ src, alt, fallbackSrc, bucketName, className = "", w
 
   return (
     <div>
-      {/* Option 1: Using img tag (commented out in your code) */}
-      {/* {imageSrc && (
-        <img 
-          src={imageSrc} 
-          alt={alt} 
-          onError={() => setImageSrc(fallbackSrc)} 
-          className={className}
-          width={width} 
-          height={height}
-        />
-      )} */}
-
-      {/* Option 2: Using div with background */}
       <div
         className={`bg-cover bg-center w-24 h-36 ${className}`}
         style={backgroundStyle}
