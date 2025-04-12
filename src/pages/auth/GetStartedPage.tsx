@@ -23,7 +23,7 @@ const GetStartedPage = () => {
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [isNewsLetter, setIsNewsLetter] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  
+
   function disPlayError(error: any) {
     setMessage(`Sign-up Error: ${error.message}`);
     console.log(`Sign-up Error: ${error.message}`);
@@ -45,10 +45,13 @@ const GetStartedPage = () => {
   ): Promise<void> => {
     e.preventDefault();
 
+    setIsLoading(true);
+
     if (!validateEmail(email)) {
       setMessage("Invalid email address format.");
       setToastType("error");
       setShowToast(true);
+      setIsLoading(false);
       return;
     }
 
@@ -75,6 +78,7 @@ const GetStartedPage = () => {
       setMessage(`Sign-up Error: ${signUpError.message}`);
       setToastType("error");
       setShowToast(true);
+      setIsLoading(false);
       return;
     }
 
@@ -95,6 +99,7 @@ const GetStartedPage = () => {
       setMessage(`Sign-up Error: ${referralError.message}`);
       setToastType("error");
       setShowToast(true);
+      setIsLoading(false);
       return;
     }
 
@@ -185,16 +190,14 @@ const GetStartedPage = () => {
             )}
           </button>
         </div>
-        <CustomCheckbox onClick={setIsNewsLetter}/>
+        <CustomCheckbox onClick={setIsNewsLetter} />
       </div>
       <button
-        className={`flex items-center justify-center bg-accent-green text-white w-full font-medium py-2 px-6 rounded-lg hover:scale-95 duration-300 ${
-          isLoading ? "opacity-50" : ""
-        }`}
+        className={`flex items-center justify-center bg-accent-green text-white w-full font-medium py-2 px-6 rounded-lg hover:scale-95 duration-300 ${isLoading ? "opacity-50" : ""}`}
         type="submit"
         disabled={isLoading}
       >
-        <span>{isLoading ? "Loading..." : "Sign Up"}</span>
+        <span>{isLoading ? "Loading..." : "Sign Up"} </span>
       </button>
       {showToast && (
         <Toast message={message} type={toastType} onClose={handleCloseToast} />

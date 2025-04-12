@@ -30,9 +30,9 @@ type Props = {
 export default function FrontOfCard({ profile }: Props) {
   return (
     <section className="grid gap-8 text-text-light ">
-      <p className="text-white">Membership Card - Front</p>
+      <p className="dark:text-white text-black">Membership Card - Front</p>
       <div
-        className=" p-4 gap-4  relative w-[500px] h-[315px] rounded-3xl justify-center  overflow-hidden isolate "
+        className=" p-4 gap-4 border-[2px] border-gray-300 relative w-[500px] h-[315px] rounded-3xl justify-center  overflow-hidden isolate "
         id="membership-card"
       >
         <img

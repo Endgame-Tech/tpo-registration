@@ -1,10 +1,18 @@
 const TopLogo = () => {
   return (
-    <a href="https://thenewnigeriaproject.com/">
+    <a href="https://thepeoplesopposition.org/">
+      {/* Light mode logo */}
+      <img
+        src="/logo-black.png"
+        alt="The People's Opposition Logo"
+        className="w-32 block dark:hidden"
+      />
+
+      {/* Dark mode logo */}
       <img
         src="/logo.png"
-        alt="The New Nigeria Project Logo"
-        className="w-32"
+        alt="The People's Opposition Logo"
+        className="w-32 hidden dark:block"
       />
     </a>
   );
@@ -16,8 +24,8 @@ type Props = {
 export const CardLogo = ({ className }: Props) => {
   return (
     <img
-      src="/logo.png"
-      alt="The New Nigeria Project Logo"
+      src="/logo-black.png"
+      alt="The People's Opposition Logo"
       className={className}
     />
   );
