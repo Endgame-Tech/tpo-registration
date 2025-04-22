@@ -1,6 +1,8 @@
-import { Profile } from "../pages/profile/Card/FrontOfCard";
+// src/utils/generateQRCodeText.ts
 
-export  function generatQRCodeText(profile: Profile) {
+import { UserProfile } from "../context/UserContext";
+
+export function generateQRCodeText(profile: UserProfile) {
   const data = { ...profile };
 
   return JSON.stringify({
@@ -12,4 +14,3 @@ export  function generatQRCodeText(profile: Profile) {
     // ward: data.ward,
   });
 }
- 

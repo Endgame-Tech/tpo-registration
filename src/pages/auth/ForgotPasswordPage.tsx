@@ -1,9 +1,15 @@
-import React, { useState } from "react";
-import { supabase } from "../../supabase";
+import { useState } from "react";
+import Toast from "../../components/Toast.js";
+import { useNavigate } from "react-router";
 
-const ForgotPassword = () => {
+const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
+
+export default function ForgotPasswordPage() {
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
+  const [toastType, setToastType] = useState<"success" | "error">("success");
+  const [showToast, setShowToast] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -11,17 +17,25 @@ const ForgotPassword = () => {
     setLoading(true);
     setMessage("");
 
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/auth/change-password`,
-    });
+    try {
+      const res = await fetch(`${API_BASE}/auth/forgot-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ email }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Error sending reset email");
 
-    if (error) {
-      setMessage(error.message);
-    } else {
-      setMessage("Check your email for the password reset link!");
+      setMessage(data.message);
+      setToastType("success");
+    } catch (err: any) {
+      setMessage(err.message || "Server error");
+      setToastType("error");
+    } finally {
+      setShowToast(true);
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
   return (
@@ -36,7 +50,6 @@ const ForgotPassword = () => {
         <label className="block text-dark dark:text-gray-100 mb-2 text-sm">
           Email
         </label>
-
         <input
           type="email"
           placeholder="Enter your email"
@@ -48,15 +61,16 @@ const ForgotPassword = () => {
       </div>
 
       <button
+        type="submit"
         className="bg-accent-green text-white rounded-lg p-2"
         disabled={loading}
       >
-        {" "}
         {loading ? "Sending..." : "Send Reset Link"}
       </button>
-      {message && <p style={{ color: "green" }}>{message}</p>}
+
+      {showToast && (
+        <Toast message={message} type={toastType} onClose={() => setShowToast(false)} />
+      )}
     </form>
   );
-};
-
-export default ForgotPassword;
+}

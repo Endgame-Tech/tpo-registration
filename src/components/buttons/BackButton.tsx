@@ -16,7 +16,7 @@ const BackButton: React.FC<BackButtonProps> = ({ className = "" }) => {
   return (
     <button
       onClick={handleBackClick}
-      className={`flex items-center  rounded-full p-2 dark:border-text-dark bg-accent-green/50 ${className}`}
+      className={`flex items-center rounded-full p-2 dark:border-text-dark bg-accent-green/50 ${className}`}
     >
       <ArrowLeftIcon className="h-5 w-5 dark:text-text-dark" />
       {/* <span className="ml-2">Back</span> */}

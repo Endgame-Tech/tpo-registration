@@ -31,4 +31,25 @@ export const CardLogo = ({ className }: Props) => {
   );
 };
 
+export const WebIcon = ({ className }: Props) => {
+  return (
+    <img
+      src="/web_globe.svg"
+      alt="Web Icon"
+      className={className}
+    />
+  );
+}
+
+export const MailIcon = ({ className }: Props) => {
+  return (
+    <img
+      src="/mail_icon.svg"
+      alt="Mail Icon"
+      className={className}
+    />
+  );
+}
+
+
 export default TopLogo;

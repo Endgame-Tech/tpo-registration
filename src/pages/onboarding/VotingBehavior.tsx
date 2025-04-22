@@ -1,104 +1,91 @@
-import RadioComp from "../../components/buttons/radio";
 import { useState } from "react";
-import NextButton from "../../components/NextButton.js";
-import { supabase } from "../../supabase.ts";
 import { Link, useNavigate } from "react-router";
-import Toast from "../../components/Toast.js";
-import Progressbar from "../../components/Progressbar.tsx";
-import { useOnboarding } from "../../context/OnboardingContext.tsx";
-import checkReqiredField from "../../utils/CheckRequired.ts";
+import NextButton from "../../components/NextButton";
+import Toast from "../../components/Toast";
+import Progressbar from "../../components/Progressbar";
+import RadioComp from "../../components/buttons/radio";
+import checkReqiredField from "../../utils/CheckRequired";
+import { useOnboarding } from "../../context/OnboardingContext";
 
+const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 
-export default function VotingBehavior() {
-  let navigate = useNavigate();
-  const requiredFields = [
-    {
-      label: "Likely to Vote in Upcoming Elections?",
-      value: "likely_to_vote",
-    },
-  ];
+export default function VotingBehaviorPage() {
+  const navigate = useNavigate();
+  const { profileDetails, updateProfileDetails, isLoaded } = useOnboarding();
 
-  const { profileDetails, updateProfileDetails } = useOnboarding();
-  const [isLoading, setIsLoading] = useState(false);
+  const [toast, setToast] = useState<{ type: "success" | "error"; message: string } | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  const likely_to_vote = [
+  const votingOptions = [
     { id: 1, label: "Yes", value: "yes" },
     { id: 2, label: "No", value: "no" },
     { id: 3, label: "Not Sure Yet", value: "not sure yet" },
   ];
 
-  const [toastType, setToastType] = useState<"success" | "error">("success");
-  const [showToast, setShowToast] = useState(false);
-  const [message, setMessage] = useState("");
+  const requiredFields = [
+    { label: "Likely to Vote in Upcoming Elections?", value: "likely_to_vote" },
+  ];
 
-  async function uploadData() {
-     const { is_ok, message } = checkReqiredField(
-          profileDetails,
-          requiredFields
-        );
-    
-        if (!is_ok) {
-          console.log(message);
-          setMessage(message);
-          setToastType("error");
-          setShowToast(true);
-          return;
-        }
-    const { data } = await supabase.auth.getUser();
-    const userId = data?.user?.id;
+  if (!isLoaded) return <div>Loading...</div>;
 
-    const { error: updateError } = await supabase
-      .from("profile")
-      .update(profileDetails)
-      .eq("user_id", userId);
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setLoading(true);
+    setToast(null);
 
-    if (updateError) {
-      console.log(`Login Error: ${updateError.message}`);
-      setMessage(`Login Error: ${updateError.message}`);
-      setToastType("error");
-      setShowToast(true);
-    } else {
+    const { is_ok, message } = checkReqiredField(profileDetails, requiredFields);
+    if (!is_ok) {
+      setToast({ type: "error", message });
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API_BASE}/users/me/voting-behavior`, {
+        method: "PATCH",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          likely_to_vote: profileDetails.likely_to_vote,
+        }),
+      });
+      const body = await res.json();
+      if (!res.ok) throw new Error(body.message || "Update failed");
       navigate("/onboarding/technology-and-access");
+    } catch (err: any) {
+      setToast({ type: "error", message: err.message });
+    } finally {
+      setLoading(false);
     }
   }
 
-  const handleCloseToast = () => {
-    setShowToast(false);
-  };
-
   return (
     <div className="flex flex-col justify-between px-4 py-8 max-w-[450px] w-full gap-8">
-       <Link
-        to={"/profile"}
-        className="flex items-center justify-end text-accent-green  w-full   rounded-lg"
+      <Link
+        to="/profile"
+        className="flex items-center justify-end text-accent-green w-full rounded-lg"
       >
         Skip
       </Link>
+
       <Progressbar currentNumber={7} />
-      <h2 className="text-gray-dark dark:text-gray-100 text-2xl">
-        Voting Behavior
-      </h2>
-      <form
-        className="flex flex-col gap-4"
-        onSubmit={(e) => {
-          setIsLoading(true);
-          e.preventDefault();
-          uploadData();
-          setIsLoading(false);
-        }}
-      >
+
+      <h2 className="text-gray-dark dark:text-gray-100 text-2xl">Voting Behavior</h2>
+
+      <form onSubmit={handleSubmit} className="flex flex-col gap-8">
         <RadioComp
-          value={profileDetails.likely_to_vote}
           label="Likely to Vote in Upcoming Elections?"
-          options={likely_to_vote}
+          options={votingOptions}
+          value={profileDetails.likely_to_vote}
           onChange={(value) => updateProfileDetails({ likely_to_vote: value })}
-          required={true}
+          required
         />
 
-        <NextButton content="Next" disabled={isLoading} />
+        <NextButton content="Next" disabled={loading} />
       </form>
-      {showToast && (
-        <Toast message={message} type={toastType} onClose={handleCloseToast} />
+
+      {toast && (
+        <Toast type={toast.type} message={toast.message} onClose={() => setToast(null)} />
       )}
     </div>
   );

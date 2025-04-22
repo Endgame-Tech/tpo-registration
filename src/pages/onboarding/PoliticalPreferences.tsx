@@ -1,136 +1,131 @@
 import { useEffect, useState } from "react";
-import NextButton from "../../components/NextButton.js";
-import { supabase } from "../../supabase.ts";
-import { Link, useNavigate } from "react-router";
-import Toast from "../../components/Toast.js";
-import Progressbar from "../../components/Progressbar.tsx";
-import { getPoliticalIssue, getPoliticalParties } from "../data.ts";
-import { useOnboarding } from "../../context/OnboardingContext.tsx";
-import checkReqiredField from "../../utils/CheckRequired.ts";
-import MultiSelectComp from "../../components/multi_select/MultiSelect.tsx";
-import FormSelect from "../../components/select/FormSelect.tsx";
+import { Link, useNavigate } from "react-router"; // Fixed import
+import NextButton from "../../components/NextButton";
+import Toast from "../../components/Toast";
+import Progressbar from "../../components/Progressbar";
+import FormSelect from "../../components/select/FormSelect";
+import MultiSelectComp from "../../components/multi_select/MultiSelectComp";
+import checkReqiredField from "../../utils/CheckRequired";
+import { useOnboarding } from "../../context/OnboardingContext";
+import { politicalIssueOptions, politicalPartyOptions, OptionType } from "../../utils/lookups";
+import Loading from "../../components/Loader"; // Assumed to exist for consistency
 
+const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 
-type OptionType = {
-  label: string;
-  value: any;
-  disabled?: boolean;
-};
-export default function PoliticalPrefrencesPage() {
-  let navigate = useNavigate();
+export default function PoliticalPreferencesPage() {
+  const navigate = useNavigate();
+  const { profileDetails, updateProfileDetails, isLoaded } = useOnboarding();
+
+  const [toast, setToast] = useState<{ type: "success" | "error"; message: string } | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  // State to manage selected political issues for MultiSelectComp
+  const [selectedIssues, setSelectedIssues] = useState<OptionType[]>([]);
+
+  // Initialize selectedIssues from profileDetails.top_political_issues
+  useEffect(() => {
+    const selected = politicalIssueOptions.filter(opt =>
+      profileDetails.top_political_issues?.includes(opt.value)
+    );
+    setSelectedIssues(selected);
+  }, [profileDetails.top_political_issues]);
 
   const requiredFields = [
-    {
-      label: "Political Party Affiliation (If any)",
-      value: "party_affiliation",
-    },
-    {
-      label: "Top Political Issues",
-      value: "top_political_issues",
-    },
+    { label: "Political Party Affiliation", value: "party_affiliation" },
+    { label: "Top Political Issues", value: "top_political_issues" },
   ];
 
-  const { profileDetails, updateProfileDetails } = useOnboarding();
-  const [political_issues, setPoliticalIssue] = useState([]);
-  const [political_parties, setPoliticalParties] = useState([]);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setToast(null);
 
-  useEffect(() => {
-    getPoliticalIssue(setPoliticalIssue);
-    getPoliticalParties(setPoliticalParties);
-  }, []);
-
-  const [toastType, setToastType] = useState<"success" | "error">("success");
-  const [showToast, setShowToast] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [message, setMessage] = useState("");
-
-  async function uploadData() {
-    const { is_ok, message } = checkReqiredField(
-      profileDetails,
-      requiredFields
-    );
-
+    const { is_ok, message } = checkReqiredField(profileDetails, requiredFields);
     if (!is_ok) {
-      console.log(message);
-      setMessage(message);
-      setToastType("error");
-      setShowToast(true);
+      setToast({ type: "error", message });
+      setLoading(false);
       return;
     }
 
-    const { data } = await supabase.auth.getUser();
-    const userId = data?.user?.id;
+    try {
+      const res = await fetch(`${API_BASE}/users/me/political-preferences`, {
+        method: "PATCH",
+        credentials: "include", // Include JWT cookie
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          party_affiliation: profileDetails.party_affiliation,
+          top_political_issues: profileDetails.top_political_issues,
+        }),
+      });
 
-    const { error: updateError } = await supabase
-      .from("profile")
-      .update(profileDetails)
-      .eq("user_id", userId);
+      // Robust error handling for non-JSON responses
+      const text = await res.text();
+      let body;
+      try {
+        body = JSON.parse(text);
+      } catch (e) {
+        throw new Error(`Server returned non-JSON response: ${text.slice(0, 100)}`);
+      }
 
-    if (updateError) {
-      console.log(`Login Error: ${updateError.message}`);
-      setMessage(`Login Error: ${updateError.message}`);
-      setToastType("error");
-      setShowToast(true);
-    } else {
+      if (!res.ok) throw new Error(body.message || "Update failed");
+
       navigate("/onboarding/engagement-and-mobilization");
+    } catch (err: any) {
+      setToast({ type: "error", message: err.message });
+    } finally {
+      setLoading(false);
     }
-  }
-
-  const handleCloseToast = () => {
-    setShowToast(false);
   };
 
+  if (!isLoaded) return <Loading />; // Consistent loading UI
+
   return (
-    <div className="flex flex-col justify-between px-4 py-8 max-w-[450px] w-full gap-8">
-       <Link
-        to={"/profile"}
-        className="flex items-center justify-end text-accent-green  w-full   rounded-lg"
+    <div className="flex flex-col justify-between px-4 py-8 max-w-[450px] w-full gap-8 mx-auto">
+      <Link
+        to="/profile"
+        className="flex items-center justify-end text-accent-green w-full rounded-lg"
       >
         Skip
       </Link>
+
       <Progressbar currentNumber={5} />
-      {/* Form Section */}
-      <h2 className="text-gray-dark dark:text-gray-100 text-2xl">
-        Political Prefrences
-      </h2>
-      <form
-        className="flex flex-col gap-8"
-        onSubmit={(e) => {
-          setIsLoading(true);
-          e.preventDefault();
-          uploadData();
-          setIsLoading(false);
-        }}
-      >
-        <FormSelect
-          required={true}
-          defaultSelected={profileDetails.party_affiliation}
-          label="Political Party Affiliation (If any)"
-          options={political_parties}
-          onChange={(value) =>
-            updateProfileDetails({ party_affiliation: value?.value })
-          }
-        />
-      
 
-        
-                <MultiSelectComp
-                required={true}
-                  options={political_issues}
-                  onChange={(value: OptionType[]) =>
-                    updateProfileDetails({
-                      top_political_issues: value?.map((v) => v.value),
-                    })
-                  }
-                  label="Top Political Issues"
-                  placeholder="e.g. facebook"
-                  defaultSelected={profileDetails.top_political_issues}
-                />
+      <div>
+        <p className="text-gray-dark dark:text-gray-100 text-2xl xsm:mb-6 md:mb-12">
+          Political Preferences
+        </p>
 
-        <NextButton content="Next" disabled={isLoading} />
-      </form>
-      {showToast && (
-        <Toast message={message} type={toastType} onClose={handleCloseToast} />
+        <form onSubmit={handleSubmit} className="grid gap-8">
+          <FormSelect
+            label="Political Party Affiliation (If any)"
+            options={politicalPartyOptions}
+            defaultSelected={profileDetails.party_affiliation || ""}
+            onChange={(opt) => {
+              if (!opt) return;
+              updateProfileDetails({ party_affiliation: opt.value });
+            }}
+            required
+          />
+
+          <MultiSelectComp
+            label="Top Political Issues"
+            options={politicalIssueOptions}
+            defaultSelected={selectedIssues}
+            onChange={(value: OptionType[]) => {
+              setSelectedIssues(value);
+              const selectedValues = value.map(opt => opt.value);
+              updateProfileDetails({ top_political_issues: selectedValues });
+            }}
+            required
+            className="w-full"
+          />
+
+          <NextButton content="Next" disabled={loading} />
+        </form>
+      </div>
+
+      {toast && (
+        <Toast type={toast.type} message={toast.message} onClose={() => setToast(null)} />
       )}
     </div>
   );

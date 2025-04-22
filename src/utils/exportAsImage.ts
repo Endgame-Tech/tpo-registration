@@ -1,24 +1,23 @@
+// src/utils/exportAsImage.ts
+
 import html2canvas from "html2canvas";
 
-const exportAsImage = async (el: HTMLElement, imageFileName: string): Promise<void> => {
-    const canvas = await html2canvas(el);
-    const image = canvas.toDataURL("image/png", 1.0);
-    downloadImage(image, imageFileName);
-};
+export default async function exportAsImage(element: HTMLElement, fileName: string) {
+  if (!element) return;
 
+  // Detect device pixel ratio (retina = 2, normal = 1)
+  const scale = window.devicePixelRatio || 1;
 
-const downloadImage = (blob: string, fileName: string): void => {
-    const fakeLink = window.document.createElement("a");
-    fakeLink.style.display = "none";
-    fakeLink.download = fileName;
+  const canvas = await html2canvas(element, {
+    scale: scale * 2, 
+    useCORS: true,    
+    logging: false,   
+    backgroundColor: null,
+  });
 
-    fakeLink.href = blob;
-
-    document.body.appendChild(fakeLink);
-    fakeLink.click();
-    document.body.removeChild(fakeLink);
-
-    fakeLink.remove();
-};
-
-export default exportAsImage;
+  const dataUrl = canvas.toDataURL("image/png");
+  const link = document.createElement("a");
+  link.href = dataUrl;
+  link.download = fileName;
+  link.click();
+}

@@ -1,199 +1,138 @@
-import { useEffect, useState } from "react";
-import NextButton from "../../components/NextButton.js";
-import { supabase } from "../../supabase.ts";
-import { Link, useNavigate } from "react-router";
-import Toast from "../../components/Toast.js";
-import Progressbar from "../../components/Progressbar.tsx";
-import {
-  getEthnicity,
-  getHouseholdSize,
-  getIncomeBracket,
-  getLevelOfEducation,
-  getMaritalStatus,
-  getOccupation,
-  getReligion,
-} from "../data.ts";
-import { useOnboarding } from "../../context/OnboardingContext.tsx";
-import checkReqiredField from "../../utils/CheckRequired.ts";
-import FormSelect from "../../components/select/FormSelect.tsx";
+import { useState } from "react";
+import { useNavigate } from "react-router";
+import Progressbar from "../../components/Progressbar";
+import NextButton from "../../components/NextButton";
+import FormSelect from "../../components/select/FormSelect";
 import FormCombobox from "../../components/select/FormCombobox.tsx";
+import Toast from "../../components/Toast";
+import { useOnboarding } from "../../context/OnboardingContext";
+import { ethnicGroupOptions, religionOptions, occupationCategoryOptions, levelOfEducationOptions, maritalStatusOptions, householdSizeOptions, incomeBracketOptions } from "../../utils/lookups";
+import checkRequiredField from "../../utils/CheckRequired";
+
+const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 
 export default function DemographicsPage() {
+  const { profileDetails, updateProfileDetails, isLoaded } = useOnboarding();
+  const navigate = useNavigate();
+
+  const [loading, setLoading] = useState(false);
+  const [toast, setToast] = useState<{ type: "success" | "error"; message: string } | null>(null);
+
   const requiredFields = [
-    {
-      label: "Ethnicity",
-      value: "ethnicity",
-    },
-    {
-      label: "Religion",
-      value: "religion",
-    },
-    {
-      label: "Occupation",
-      value: "occupation",
-    },
-    {
-      label: "Level of Education",
-      value: "level_of_education",
-    },
-    {
-      label: "Marital Status",
-      value: "marital_status",
-    },
-    {
-      label: "Household Size",
-      value: "household_size",
-    },
-    {
-      label: "Income Bracket",
-      value: "income_bracket",
-    },
+    { label: "Ethnicity", value: "ethnicity" },
+    { label: "Religion", value: "religion" },
+    { label: "Occupation", value: "occupation" },
+    { label: "Level of Education", value: "level_of_education" },
+    { label: "Marital Status", value: "marital_status" },
+    { label: "Household Size", value: "household_size" },
+    { label: "Income Bracket", value: "income_bracket" },
   ];
-  
-  let navigate = useNavigate();
-  const { profileDetails, updateProfileDetails } = useOnboarding();
 
-  const [ethnicity, setEthnicity] = useState([]);
-  const [religion, setReligion] = useState([]);
-  const [occupation, setOccupation] = useState([]);
-  const [level_of_education, setLevelOfEducation] = useState([]);
-  const [marital_status, setMaritalStatus] = useState([]);
-  const [household_size, setHouseholdSize] = useState([]);
-  const [income_bracket, setIncomeBracket] = useState([]);
+  if (!isLoaded) return <div>Loading...</div>; // optional, you can use your fancy Loader component
 
-  useEffect(() => {
-    getEthnicity(setEthnicity);
-    getReligion(setReligion);
-    getOccupation(setOccupation);
-    getLevelOfEducation(setLevelOfEducation);
-    getMaritalStatus(setMaritalStatus);
-    getHouseholdSize(setHouseholdSize);
-    getIncomeBracket(setIncomeBracket);
-  }, []);
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setLoading(true);
+    setToast(null);
 
-  const [toastType, setToastType] = useState<"success" | "error">("success");
-  const [isLoading, setIsLoading] = useState(false);
-  const [showToast, setShowToast] = useState(false);
-  const [message, setMessage] = useState("");
+    const { is_ok, message } = checkRequiredField(profileDetails, requiredFields);
+    if (!is_ok) {
+      setToast({ type: "error", message });
+      setLoading(false);
+      return;
+    }
 
-  async function uploadData() {
-        const {is_ok, message} = checkReqiredField(profileDetails, requiredFields )
-    
-        if (!is_ok) {
-          console.log(message);
-          setMessage(message);
-          setToastType("error");
-          setShowToast(true);
-          return
-        }
-    const { data } = await supabase.auth.getUser();
-    const userId = data?.user?.id;
-
-    const { error: updateError } = await supabase
-      .from("profile")
-      .update(profileDetails)
-      .eq("user_id", userId);
-
-    if (updateError) {
-      console.log(`Login Error: ${updateError.message}`);
-      setMessage(`Login Error: ${updateError.message}`);
-      setToastType("error");
-      setShowToast(true);
-    } else {
+    try {
+      const res = await fetch(`${API_BASE}/users/me/demographics`, {
+        method: "PATCH",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(profileDetails),
+      });
+      const body = await res.json();
+      if (!res.ok) throw new Error(body.message || "Update failed");
       navigate("/onboarding/voter-registration-information");
+    } catch (err: any) {
+      setToast({ type: "error", message: err.message });
+    } finally {
+      setLoading(false);
     }
   }
 
-  const handleCloseToast = () => {
-    setShowToast(false);
-  };
-
   return (
     <div className="flex flex-col justify-between px-4 py-8 max-w-[450px] w-full gap-8">
-       <Link
-        to={"/profile"}
-        className="flex items-center justify-end text-accent-green  w-full   rounded-lg"
-      >
-        Skip
-      </Link>
       <Progressbar currentNumber={3} />
-      {/* Form Section */}
-      <p className="text-gray-dark dark:text-gray-100 text-2xl">Demographics</p>
-      <form
-        className="flex flex-col gap-4"
-        onSubmit={(e) => {
-          setIsLoading(true);
-          e.preventDefault();
-          uploadData();
-          setIsLoading(false);
-        }}
-      >
+
+      <p className="get-started-text xsm:mb-6 md:mb-12 text-gray-dark dark:text-gray-100 text-3xl">
+        Demographic Information
+      </p>
+
+      <form onSubmit={handleSubmit} className="grid gap-8">
         <FormCombobox
-          required={true}
-          defaultSelected={profileDetails.ethnicity}
           label="Ethnicity"
-          options={ethnicity}
-          onChange={(value) => updateProfileDetails({ ethnicity: value?.value })}
+          options={ethnicGroupOptions}
+          defaultSelected={profileDetails.ethnicity}
+          onChange={(opt) => opt && updateProfileDetails({ ethnicity: opt.value })}
+          required
         />
 
         <FormSelect
-          required={true}
-          defaultSelected={profileDetails.religion}
           label="Religion"
-          options={religion}
-          onChange={(value) => updateProfileDetails({ religion: value?.value })}
+          options={religionOptions}
+          defaultSelected={profileDetails.religion}
+          onChange={(opt) => opt && updateProfileDetails({ religion: opt.value })}
+          required
         />
+
         <FormSelect
-          required={true}
-          defaultSelected={profileDetails.occupation}
           label="Occupation"
-          options={occupation}
-          onChange={(value) =>
-            updateProfileDetails({ occupation: value?.value })
-          }
+          options={occupationCategoryOptions}
+          defaultSelected={profileDetails.occupation}
+          onChange={(opt) => opt && updateProfileDetails({ occupation: opt.value })}
+          required
         />
+
         <FormSelect
-          required={true}
+          label="Level of Education"
+          options={levelOfEducationOptions}
           defaultSelected={profileDetails.level_of_education}
-          label=" Level of Education"
-          options={level_of_education}
-          onChange={(value) =>
-            updateProfileDetails({ level_of_education: value?.value })
-          }
+          onChange={(opt) => opt && updateProfileDetails({ level_of_education: opt.value })}
+          required
         />
+
         <FormSelect
-          required={true}
-          defaultSelected={profileDetails.marital_status}
           label="Marital Status"
-          options={marital_status}
-          onChange={(value) =>
-            updateProfileDetails({ marital_status: value?.value })
-          }
+          options={maritalStatusOptions}
+          defaultSelected={profileDetails.marital_status}
+          onChange={(opt) => opt && updateProfileDetails({ marital_status: opt.value })}
+          required
         />
+
         <FormSelect
-          required={true}
-          defaultSelected={profileDetails.household_size}
           label="Household Size"
-          options={household_size}
-          onChange={(value) =>
-            updateProfileDetails({ household_size: value?.value })
-          }
+          options={householdSizeOptions}
+          defaultSelected={profileDetails.household_size}
+          onChange={(opt) => opt && updateProfileDetails({ household_size: opt.value })}
+          required
         />
+
         <FormSelect
-          required={true}
-          defaultSelected={profileDetails.income_bracket}
           label="Income Bracket"
-          options={income_bracket}
-          onChange={(value) =>
-            updateProfileDetails({ income_bracket: value?.value })
-          }
+          options={incomeBracketOptions}
+          defaultSelected={profileDetails.income_bracket}
+          onChange={(opt) => opt && updateProfileDetails({ income_bracket: opt.value })}
+          required
         />
-        <NextButton content="Next" disabled={isLoading} />
+
+        <NextButton content="Next" disabled={loading} />
       </form>
 
-      {/* Next Button */}
-      {showToast && (
-        <Toast message={message} type={toastType} onClose={handleCloseToast} />
+      {toast && (
+        <Toast
+          type={toast.type}
+          message={toast.message}
+          onClose={() => setToast(null)}
+        />
       )}
     </div>
   );

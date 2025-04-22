@@ -1,42 +1,57 @@
 import { useEffect, useState } from "react";
-import { supabase } from "../../supabase.js";
 import { Link, useNavigate } from "react-router";
-import {
-  ArrowLeftEndOnRectangleIcon,
-  ArrowRightEndOnRectangleIcon,
-} from "@heroicons/react/20/solid";
+import { ArrowLeftEndOnRectangleIcon, ArrowRightEndOnRectangleIcon } from "@heroicons/react/20/solid";
+
+const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 
 export default function AuthButton() {
-  let navigate = useNavigate();
+  const navigate = useNavigate();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
-    const checkUser = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      setIsLoggedIn(!!session);
+    const checkAuth = async () => {
+      try {
+        const res = await fetch(`${API_BASE}/auth/me`, {
+          credentials: "include",
+        });
+        if (res.ok) {
+          setIsLoggedIn(true);
+        } else {
+          setIsLoggedIn(false);
+        }
+      } catch (err) {
+        console.error("Auth check failed:", err);
+        setIsLoggedIn(false);
+      }
     };
 
-    checkUser();
+    checkAuth();
   }, []);
 
-  const handleLogout = async () => { 
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      console.error("Error logging out:", error.message);
-    } else {
-      navigate("/auth/login");
+  const handleLogout = async () => {
+    try {
+      const res = await fetch(`${API_BASE}/auth/logout`, {
+        method: "POST",
+        credentials: "include",
+      });
+      if (res.ok) {
+        setIsLoggedIn(false);
+        navigate("/auth/login");
+      } else {
+        console.error("Failed to logout");
+      }
+    } catch (err) {
+      console.error("Logout error:", err);
     }
   };
 
   if (isLoggedIn) {
     return (
       <button
-        className="group flex w-full items-center gap-2 rounded-lg py-1.5 px-3  hover:bg-black/10 duration-300 delay-100 dark:text-text-dark dark:hover:bg-white/10 text-text-light"
         onClick={handleLogout}
+        className="group flex w-full items-center gap-2 rounded-lg py-1.5 px-3 hover:bg-black/10 duration-300 delay-100 dark:text-text-dark dark:hover:bg-white/10 text-text-light"
       >
-      <ArrowLeftEndOnRectangleIcon className="size-4  fill-accent-green" />
+        <ArrowLeftEndOnRectangleIcon className="size-4 fill-accent-green" />
         Logout
       </button>
     );
@@ -44,10 +59,10 @@ export default function AuthButton() {
 
   return (
     <Link
-      to={"/auth/login"}
-      className="group flex w-full items-center gap-2 rounded-lg py-1.5 px-3  hover:bg-black/10 duration-300 delay-100 dark:text-text-dark dark:hover:bg-white/10 text-text-light"
+      to="/auth/login"
+      className="group flex w-full items-center gap-2 rounded-lg py-1.5 px-3 hover:bg-black/10 duration-300 delay-100 dark:text-text-dark dark:hover:bg-white/10 text-text-light"
     >
-      <ArrowRightEndOnRectangleIcon className="size-4  fill-accent-green" />
+      <ArrowRightEndOnRectangleIcon className="size-4 fill-accent-green" />
       Login
     </Link>
   );

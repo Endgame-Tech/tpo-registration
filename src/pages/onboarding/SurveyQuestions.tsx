@@ -1,170 +1,99 @@
-import RadioComp from "../../components/buttons/radio";
-import { useEffect, useState } from "react";
-import NextButton from "../../components/NextButton.js";
-import { supabase } from "../../supabase.ts";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router";
-import Toast from "../../components/Toast.js";
-import MultiSelectComp from "../../components/multi_select/MultiSelect.tsx";
-import Progressbar from "../../components/Progressbar.tsx";
-import { useOnboarding } from "../../context/OnboardingContext.tsx";
-import { getElectionConcerns } from "../data.ts";
-import checkReqiredField from "../../utils/CheckRequired.ts";
+import NextButton from "../../components/NextButton";
+import Progressbar from "../../components/Progressbar";
+import Toast from "../../components/Toast";
+import RadioComp from "../../components/buttons/radio";
+import checkReqiredField from "../../utils/CheckRequired";
+import { useOnboarding } from "../../context/OnboardingContext";
 
-type OptionType = {
-  label: string;
-  value: any;
-  disabled?: boolean;
-};
+const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
+
 export default function SurveyQuestionsPage() {
-  let navigate = useNavigate();
-  const { profileDetails, updateProfileDetails } = useOnboarding();
-  const [election_concerns, setElectionConcerns] = useState([]);
+  const navigate = useNavigate();
+  const { profileDetails, updateProfileDetails, isLoaded } = useOnboarding();
+
+  const [toast, setToast] = useState<{ type: "success" | "error"; message: string } | null>(null);
+  const [loading, setLoading] = useState(false);
+
   const requiredFields = [
-    {
-      label: "Can your vote make a difference?",
-      value: "vote_impact",
-    },
-    {
-      label: "Biggest Concern About the Election Process",
-      value: "election_concerns",
-    },
-    {
-      label: "Do You Trust in The Election Management Body",
-      value: "trust_in_election_body",
-    },
+    { label: "Can your vote make a difference?", value: "vote_impact" },
   ];
 
-  useEffect(() => {
-    getElectionConcerns(setElectionConcerns);
-  }, []);
-
-  const vote_impact = [
+  const voteImpactOptions = [
     { id: 1, label: "Yes", value: "yes" },
     { id: 2, label: "No", value: "no" },
     { id: 3, label: "I hope it does", value: "i hope it does" },
   ];
-  const trust_in_election_body = [
-    { id: 1, label: "Yes", value: "yes" },
-    { id: 2, label: "No", value: "no" },
-    { id: 3, label: "A little", value: "a little" },
-  ];
 
-  const [toastType, setToastType] = useState<"success" | "error">("success");
-  const [showToast, setShowToast] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  if (!isLoaded) return <div>Loading...</div>;
 
-  const [message, setMessage] = useState("");
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setLoading(true);
+    setToast(null);
 
-  async function uploadData() {
-    const { is_ok, message } = checkReqiredField(
-      profileDetails,
-      requiredFields
-    );
-
+    const { is_ok, message } = checkReqiredField(profileDetails, requiredFields);
     if (!is_ok) {
-      console.log(message);
-      setMessage(message);
-      setToastType("error");
-      setShowToast(true);
+      setToast({ type: "error", message });
+      setLoading(false);
       return;
     }
-    const { data } = await supabase.auth.getUser();
-    const userId = data?.user?.id;
 
-    const { error: updateError } = await supabase
-      .from("profile")
-      .update(profileDetails)
-      .eq("user_id", userId);
-
-    if (updateError) {
-      console.log(`Login Error: ${updateError.message}`);
-      setMessage(`Login Error: ${updateError.message}`);
-      setToastType("error");
-      setShowToast(true);
-    } else {
-      navigate("/profile");
+    try {
+      const res = await fetch(`${API_BASE}/users/me/survey-questions`, {
+        method: "PATCH",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          vote_impact: profileDetails.vote_impact,
+          trust_in_election_body: profileDetails.trust_in_election_body,
+          has_onboarded: true,
+        }),
+      });
+      const body = await res.json();
+      if (!res.ok) throw new Error(body.message || "Update failed");
+      navigate("/profile"); // go to profile after last onboarding stage
+    } catch (err: any) {
+      setToast({ type: "error", message: err.message });
+    } finally {
+      setLoading(false);
     }
   }
-
-  const handleCloseToast = () => {
-    setShowToast(false);
-  };
 
   return (
     <div className="flex flex-col justify-between px-4 py-8 max-w-[450px] w-full gap-8">
       <Link
-        to={"/profile"}
-        className="flex items-center justify-end text-accent-green  w-full   rounded-lg"
+        to="/profile"
+        className="flex items-center justify-end text-accent-green w-full rounded-lg"
       >
         Skip
       </Link>
 
       <Progressbar currentNumber={9} />
+
       <h2 className="text-gray-dark dark:text-gray-100 text-2xl">
         Survey Questions (Optional)
       </h2>
-      <form
-        className="flex flex-col gap-4"
-        onSubmit={(e) => {
-          setIsLoading(true);
-          e.preventDefault();
-          uploadData();
-          setIsLoading(false);
-        }}
-      >
+
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <RadioComp
-          required={true}
-          value={profileDetails.vote_impact}
           label="Can your vote make a difference?"
-          options={vote_impact}
+          options={voteImpactOptions}
+          value={profileDetails.vote_impact}
           onChange={(value) => updateProfileDetails({ vote_impact: value })}
+          required
         />
 
-        <MultiSelectComp
-          required={true}
-          defaultSelected={profileDetails.election_concerns}
-          options={election_concerns}
-          onChange={(value: OptionType[]) =>
-            updateProfileDetails({
-              election_concerns: value?.map((v) => v.value),
-            })
-          }
-          label="Biggest Concern About the Election Process"
-          placeholder="e.g. Electoral Fraud"
-        />
+        <p className="dark:text-white text-sm">
+          Click this <a href="https://fixinec.org" target="_blank" rel="noopener noreferrer" className="text-accent-green underline">Link</a> to sign the petition for electoral reforms.
+        </p>
 
-        <RadioComp
-          required={true}
-          value={profileDetails.trust_in_election_body}
-          label="Do You Trust in The Election Management Body"
-          options={trust_in_election_body}
-          onChange={(value) =>
-            updateProfileDetails({ trust_in_election_body: value })
-          }
-        />
-
-        <div>
-          <label
-            htmlFor=""
-            className="block text-dark dark:text-gray-100 mb-2 text-sm"
-          >
-            Are there any additional notes or comments?
-          </label>
-          <textarea
-            name=""
-            id=""
-            rows={10}
-            className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-200 dark:bg-secondary-light text-gray-700 dark:text-gray-200 "
-            onChange={(e) =>
-              updateProfileDetails({ additional_comments: e.target.value })
-            }
-          ></textarea>
-        </div>
-
-        <NextButton content="Next" disabled={isLoading} />
+        <NextButton content="Next" disabled={loading} />
       </form>
-      {showToast && (
-        <Toast message={message} type={toastType} onClose={handleCloseToast} />
+
+      {toast && (
+        <Toast type={toast.type} message={toast.message} onClose={() => setToast(null)} />
       )}
     </div>
   );

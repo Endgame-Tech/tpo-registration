@@ -1,140 +1,129 @@
 import { useState } from "react";
-import NextButton from "../../components/NextButton.js";
-import { supabase } from "../../supabase.ts";
 import { Link, useNavigate } from "react-router";
-import Toast from "../../components/Toast.js";
-import RadioComp from "../../components/buttons/radio.tsx";
-import Progressbar from "../../components/Progressbar.tsx";
-import { useOnboarding } from "../../context/OnboardingContext.tsx";
-import checkReqiredField from "../../utils/CheckRequired.ts";
-import FormSelect from "../../components/select/FormSelect.tsx";
+import NextButton from "../../components/NextButton";
+import Progressbar from "../../components/Progressbar";
+import Toast from "../../components/Toast";
+import RadioComp from "../../components/buttons/radio";
+import FormSelect from "../../components/select/FormSelect";
+import TextInput from "../../components/inputs/TextInput";
+import checkRequiredField from "../../utils/CheckRequired";
+import { useOnboarding } from "../../context/OnboardingContext";
+
+const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 
 export default function VoterRegistrationInformationPage() {
-  let navigate = useNavigate();
-  const requiredFields = [
-    {
-      label: "Are you Registered to Vote?",
-      value: "is_registered",
-    },
-    {
-      label: "Voter Registration Year",
-      value: "registration_date",
-    },
-  ];
+  const navigate = useNavigate();
+  const { profileDetails, updateProfileDetails, isLoaded } = useOnboarding();
 
-  const { profileDetails, updateProfileDetails } = useOnboarding();
+  const [loading, setLoading] = useState(false);
+  const [toast, setToast] = useState<{ type: "success" | "error"; message: string } | null>(null);
+
+  const requiredFields = [
+    { label: "Are you Registered to Vote?", value: "is_registered" },
+    { label: "Voter Registration Year", value: "registration_date" },
+  ];
 
   const is_registered = [
     { id: 1, label: "Yes", value: "yes" },
     { id: 2, label: "No", value: "no" },
   ];
 
-  const [toastType, setToastType] = useState<"success" | "error">("success");
-  const [showToast, setShowToast] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [message, setMessage] = useState("");
+  const getYears = () => {
+    const currentYear = new Date().getFullYear();
+    const years = [];
+    for (let year = 1960; year <= currentYear; year++) {
+      years.push({ id: year, label: year.toString(), value: year.toString() });
+    }
+    return years;
+  };
 
-  async function uploadData() {
-    const { is_ok, message } = checkReqiredField(
-      profileDetails,
-      requiredFields
-    );
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setToast(null);
 
+    const { is_ok, message } = checkRequiredField(profileDetails, requiredFields);
     if (!is_ok) {
-      console.log(message);
-      setMessage(message);
-      setToastType("error");
-      setShowToast(true);
+      setToast({ type: "error", message });
+      setLoading(false);
       return;
     }
 
-    const { data } = await supabase.auth.getUser();
-    const userId = data?.user?.id;
+    try {
+      const res = await fetch(`${API_BASE}/users/me/voter-registration`, {
+        method: "PATCH",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          is_registered: profileDetails.is_registered,
+          voter_id_number: profileDetails.voter_id_number,
+          registration_date: profileDetails.registration_date,
+        }),
+      });
+      const body = await res.json();
+      if (!res.ok) throw new Error(body.message || "Update failed");
 
-    const { error: updateError } = await supabase
-      .from("profile")
-      .update(profileDetails)
-      .eq("user_id", userId);
-
-    if (updateError) {
-      console.log(`Login Error: ${updateError.message}`);
-      setMessage(`Login Error: ${updateError.message}`);
-      setToastType("error");
-      setShowToast(true);
-    } else {
-      navigate("/onboarding/political-prefrences");
+      navigate("/onboarding/political-preferences");
+    } catch (err: any) {
+      setToast({ type: "error", message: err.message });
+    } finally {
+      setLoading(false);
     }
-  }
-
-  function getYears() {
-    const minYear = 1960;
-    const date = new Date();
-    const maxYear = date.getFullYear();
-    const diff = maxYear - minYear;
-
-    const years = Array(diff+1).fill("");
-    return years.map((_, index) => {
-      return {
-        id: index,
-        label: `${index + minYear}`,
-        value: `${index + minYear}`,
-        unavailable: false,
-      };
-    });
-  }
-
-  const handleCloseToast = () => {
-    setShowToast(false);
   };
+
+  if (!isLoaded) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div className="flex flex-col justify-between px-4 py-8 max-w-[450px] w-full gap-8">
-       <Link
-        to={"/profile"}
-        className="flex items-center justify-end text-accent-green  w-full   rounded-lg"
-      >
+      <Link to="/profile" className="flex items-center justify-end text-accent-green w-full rounded-lg">
         Skip
       </Link>
+
       <Progressbar currentNumber={4} />
-      {/* Form Section */}
+
       <div>
-        <p className="text-gray-dark dark:text-gray-100 text-2xl xsm:mb-6 md:mb-12 text-gray-dark ">
+        <p className="text-gray-dark dark:text-gray-100 text-2xl xsm:mb-6 md:mb-12">
           Voter Registration Information
         </p>
 
-        <form
-          className="grid gap-8"
-          onSubmit={(e) => {
-            setIsLoading(true);
-            e.preventDefault();
-            uploadData();
-            setIsLoading(false);
-          }}
-        >
+        <form className="grid gap-8" onSubmit={handleSubmit}>
           <RadioComp
             label="Are you Registered to Vote?"
             options={is_registered}
-            onChange={(value) => updateProfileDetails({ is_registered: value })}
             value={profileDetails.is_registered}
-            required={true}
+            onChange={(opt) => updateProfileDetails({ is_registered: opt })}
+            required
           />
 
+          <TextInput
+            label="Voter Identification Number (VIN)"
+            placeholder="9018 XXXX XXXX XXXX XXXX"
+            type="text"
+            value={profileDetails.voter_id_number || ""}
+            onChange={(e) => updateProfileDetails({ voter_id_number: e.target.value })}
+            required={false}
+          />
 
           <FormSelect
-            required={true}
-            defaultSelected={profileDetails.registration_date}
             label="Voter Registration Year"
             options={getYears()}
-            onChange={(value) =>
-              updateProfileDetails({ registration_date: value?.value })
-            }
+            defaultSelected={profileDetails.registration_date}
+            onChange={(opt) => opt && updateProfileDetails({ registration_date: opt.value })}
+            required
           />
-          <NextButton content="Next" disabled={isLoading} />
+
+          <NextButton content="Next" disabled={loading} />
         </form>
       </div>
 
-      {showToast && (
-        <Toast message={message} type={toastType} onClose={handleCloseToast} />
+      {toast && (
+        <Toast
+          type={toast.type}
+          message={toast.message}
+          onClose={() => setToast(null)}
+        />
       )}
     </div>
   );

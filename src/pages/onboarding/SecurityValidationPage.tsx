@@ -1,82 +1,98 @@
-import { useState } from "react";
-import NextButton from "../../components/NextButton.js";
-import TextInput from "../../components/inputs/TextInput.tsx";
+import { useState, useEffect, ChangeEvent } from "react";
 import { useNavigate } from "react-router";
-import { supabase } from "../../supabase.ts";
-import Avatar from "../../components/select/UploadPhotos.tsx";
-import Toast from "../../components/Toast.tsx";
-import Progressbar from "../../components/Progressbar.tsx";
-import { useOnboarding } from "../../context/OnboardingContext.tsx";
-import checkReqiredField from "../../utils/CheckRequired.ts";
+import NextButton from "../../components/NextButton";
+import Progressbar from "../../components/Progressbar";
+import Toast from "../../components/Toast";
+import checkReqiredField from "../../utils/CheckRequired";
+import { useOnboarding } from "../../context/OnboardingContext";
+import imageCompressor from "../../utils/ImageCompression";
 
-export default function Account({}) {
-  const requiredFields = [
-    {
-      label: "Photo",
-      value: "profile_picture_url",
-    },
- 
-  ];
-  let navigate = useNavigate();
-  const { profileDetails, updateProfileDetails } = useOnboarding();
+const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 
-  const [toastType, setToastType] = useState<"success" | "error">("success");
-  const [showToast, setShowToast] = useState(false);
+export default function SecurityValidationPage() {
+  const { profileDetails, updateProfileDetails, isLoaded } = useOnboarding();
+  const navigate = useNavigate();
+
+  const [avatarUrl, setAvatarUrl] = useState<string>(profileDetails.profile_picture_url || "");
   const [isLoading, setIsLoading] = useState(false);
-  const [message, setMessage] = useState("");
+  const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
-  const [avatar_url, setAvatarUrl] = useState<string | null>(null);
+  const requiredFields = [{ label: "Photo", value: "profile_picture_url" }];
 
-  async function uploadData() {
+  useEffect(() => {
+    // initialize avatarUrl from context
+    if (profileDetails.profile_picture_url) {
+      setAvatarUrl(profileDetails.profile_picture_url);
+    }
+  }, [profileDetails.profile_picture_url]);
 
-        const { is_ok, message } = checkReqiredField(
-          profileDetails,
-          requiredFields
-        );
-    
-        if (!is_ok) {
-          console.log(message);
-          setMessage(message);
-          setToastType("error");
-          setShowToast(true);
-          return;
-        }
+  if (!isLoaded) {
+    return <div>Loading...</div>; // or your Loader component
+  }
 
+  // handle file selection and upload to Cloudinary via backend
+  async function handleFileChange(e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setIsLoading(true);
+    setToast(null);
+    try {
+      // compress the file if needed
+      // assume imageCompressor returns compressed Blob
+      const { error: compressError, compressedFile } = await imageCompressor(file);
+      if (compressError || !compressedFile) {
+        throw compressError || new Error("Image compression failed");
+      }
 
-    const { data } = await supabase.auth.getUser();
-    const userId = data?.user?.id;
+      const formData = new FormData();
+      formData.append('image', compressedFile, compressedFile.name);
 
-    const { error: updateError } = await supabase
-      .from("profile")
-      .update(profileDetails)
-      .eq("user_id", userId);
+      const res = await fetch(`${API_BASE}/upload/profile-picture`, {
+        method: 'POST',
+        credentials: 'include',
+        body: formData,
+      });
+      const body = await res.json();
+      if (!res.ok) throw new Error(body.message || 'Upload failed');
 
-    if (updateError) {
-      console.log(`Login Error: ${updateError.message}`);
-      setMessage(`Login Error: ${updateError.message}`);
-      setToastType("error");
-      setShowToast(true);
-    } else {
-      navigate("/onboarding/demographics");
+      const url = body.url; // backend returns { url: string }
+      setAvatarUrl(url);
+      updateProfileDetails({ profile_picture_url: url });
+      setToast({ type: 'success', message: 'Profile photo updated.' });
+    } catch (err: any) {
+      setToast({ type: 'error', message: err.message });
+    } finally {
+      setIsLoading(false);
     }
   }
 
-  async function uploadPhoto(avatarUrl = "") {
-    updateProfileDetails({ profile_picture_url: avatarUrl });
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setToast(null);
 
-    const { data: dat, error } = await supabase.storage
-      .from("profile-pictures")
-      .download(avatarUrl);
-
-    if (error) {
-      throw error;
+    const { is_ok, message } = checkReqiredField(profileDetails, requiredFields);
+    if (!is_ok) {
+      setToast({ type: 'error', message });
+      setIsLoading(false);
+      return;
     }
-    const url = URL.createObjectURL(dat);
-    setAvatarUrl(url);
-  }
 
-  const handleCloseToast = () => {
-    setShowToast(false);
+    try {
+      const res = await fetch(`${API_BASE}/users/me/security-validation`, {
+        method: 'PATCH',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ profile_picture_url: avatarUrl }),
+      });
+      const body = await res.json();
+      if (!res.ok) throw new Error(body.message || 'Update failed');
+      navigate('/onboarding/demographics');
+    } catch (err: any) {
+      setToast({ type: 'error', message: err.message });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -85,40 +101,34 @@ export default function Account({}) {
       <p className="get-started-text xsm:mb-6 md:mb-12 text-gray-dark dark:text-gray-100 text-3xl">
         Security and Validation
       </p>
-
-      <form
-        className="grid gap-8"
-        onSubmit={(e) => {
-          setIsLoading(true);
-          e.preventDefault();
-          uploadData();
-          setIsLoading(false);
-        }}
-      >
-        <Avatar
-          url={avatar_url}
-          size={200}
-          onUpload={(event, url) => {
-            console.log("event", event);
-            uploadPhoto(url);
-          }}
-        />
-        
-        <TextInput
-          label="Name of Citizen who referred you (insert nill if no one refered you)"
-          placeholder="John"
-          type="text"
-          value={profileDetails.referrer_name}
-          onChange={(evt) => {
-            updateProfileDetails({ referrer_name: evt.target.value });
-          }}
-          required={false}
-        />
+      <form onSubmit={handleSubmit} className="grid gap-8">
+        <figure className="flex justify-center">
+          <img
+            src={avatarUrl || '/photo.png'}
+            alt="profile pic"
+            className="w-52 h-52 object-cover rounded-full"
+          />
+        </figure>
+        <div className="w-full flex justify-center">
+          <label
+            htmlFor="avatar"
+            className="p-2 w-full bg-secondary-dark text-white rounded-lg text-center cursor-pointer"
+          >
+            {isLoading ? 'Uploading...' : 'Upload New Photo'}
+          </label>
+          <input
+            id="avatar"
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handleFileChange}
+            disabled={isLoading}
+          />
+        </div>
         <NextButton content="Next" disabled={isLoading} />
       </form>
-
-      {showToast && (
-        <Toast message={message} type={toastType} onClose={handleCloseToast} />
+      {toast && (
+        <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />
       )}
     </div>
   );

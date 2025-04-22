@@ -1,6 +1,4 @@
-
-
-import  { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { MultiSelect } from "react-multi-select-component";
 
 
@@ -23,12 +21,12 @@ type TextInputProps = {
 export default function MultiSelectComp({
   defaultSelected = [],
   options = [],
-  onChange = () => {},
+  onChange = () => { },
   placeholder = "",
   label = "",
   required = false,
 }: TextInputProps) {
-  
+
   const [selected, setSelected] = useState<OptionType[]>([]);
 
   useEffect(() => {
@@ -44,9 +42,13 @@ export default function MultiSelectComp({
       <MultiSelect
         options={options}
         value={selected}
-        onChange={(value:OptionType[]) => {onChange(value); setSelected(value) }}
+        onChange={(value: OptionType[]) => { onChange(value); setSelected(value) }}
         labelledBy={placeholder}
         hasSelectAll={false}
+        valueRenderer={(selected) => {
+          if (selected.length === 0) return placeholder;
+          return `${selected.length} selected`;
+        }}
       />
     </div>
   );

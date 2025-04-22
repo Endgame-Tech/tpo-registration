@@ -1,65 +1,73 @@
+// src/pages/auth/ResendPage.tsx
 import { useState } from "react";
-import { supabase } from "../../supabase";
+import Toast from "../../components/Toast.js";
+import { useNavigate } from "react-router";
 
+const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 
-const ResendVerification = () => {
-  const [email, setEmail] = useState('');
-  const [message, setMessage] = useState('');
-  const [error, setError] = useState('');
+export default function ResendPage() {
+  const navigate = useNavigate();
+  const [email, setEmail] = useState("");
+  const [message, setMessage] = useState("");
+  const [toastType, setToastType] = useState<"success" | "error">("success");
+  const [showToast, setShowToast] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const handleResendEmail = async () => {
-    setMessage('');
-    setError('');
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     if (!email) {
-      setError('Please enter your email address.');
+      setMessage("Please enter your email");
+      setToastType("error");
+      setShowToast(true);
       return;
     }
-
+    setLoading(true);
     try {
-      const { error } = await supabase.auth.resend({
-        email,
-        type: "signup", 
+      const res = await fetch(`${API_BASE}/auth/resend-confirmation`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ email }),
       });
-
-      if (error) {
-        setError(error.message);
-      } else {
-        setMessage('Verification email resent successfully. Please check your inbox.');
-      }
-    } catch (err) {
-      setError('An unexpected error occurred.');
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Error");
+      setMessage(data.message);
+      setToastType("success");
+    } catch (err: any) {
+      setMessage(err.message);
+      setToastType("error");
+    } finally {
+      setShowToast(true);
+      setLoading(false);
     }
   };
 
   return (
-
-<form
-onSubmit={handleResendEmail}
-className="flex flex-col justify-between px-4 py-8 max-w-[450px] w-full gap-4"
->
-<p className="text-gray-dark dark:text-gray-100 text-2xl">
-Resend Verification Email
-</p>
-<div>
-  <label className="block text-dark dark:text-gray-100 mb-2 text-sm">
-    Email
-  </label>
-
-  <input
-  type="email"
-  placeholder="Enter your email"
-  value={email}
-  onChange={(e) => setEmail(e.target.value)}
-   className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-[#00123A10] dark:bg-gray-800 text-gray-700 dark:text-gray-200"
-   required
-/>
-</div>
-
-<button className="bg-accent-green text-white rounded-lg p-2">Resend Email</button>
-{message && <p style={{ color: 'green' }}>{message}</p>}
-{error && <p style={{ color: 'red' }}>{error}</p>}
-</form>
+    <form onSubmit={handleSubmit}
+      className="flex flex-col justify-center items-center p-8 max-w-md mx-auto gap-4">
+      <h2 className="text-2xl dark:text-white">Resend Verification Email</h2>
+      <input
+        type="email"
+        placeholder="Your email"
+        value={email}
+        onChange={e => setEmail(e.target.value)}
+        className="w-full p-3 border rounded-lg"
+        required
+      />
+      <button
+        type="submit"
+        disabled={loading}
+        className="bg-accent-green text-white py-2 rounded-lg w-full"
+      >
+        {loading ? "Sending..." : "Resend Email"}
+      </button>
+      {showToast && (
+        <Toast
+          message={message}
+          type={toastType}
+          onClose={() => setShowToast(false)}
+        />
+      )}
+    </form>
   );
-};
-
-export default ResendVerification;
+}

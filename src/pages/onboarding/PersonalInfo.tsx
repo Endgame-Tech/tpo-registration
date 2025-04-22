@@ -1,326 +1,197 @@
 import { useEffect, useState } from "react";
-import NextButton from "../../components/NextButton.js";
-import TextInput from "../../components/inputs/TextInput.tsx";
-import { supabase } from "../../supabase.ts";
 import { useNavigate } from "react-router";
-import Toast from "../../components/Toast.js";
-import Progressbar from "../../components/Progressbar.tsx";
-import { useOnboarding } from "../../context/OnboardingContext.tsx";
-import checkReqiredField from "../../utils/CheckRequired.ts";
-import { generateMemberId } from "../../utils/generateMemberId.ts";
-import PhoneInput from "../../components/PhoneInput.tsx";
-import FormSelect from "../../components/select/FormSelect.tsx";
-import { convertData } from "../../utils/ReformatToOption.tsx";
-import { statesLGAWardList } from "../../utils/StateLGAWard.ts";
+import NextButton from "../../components/NextButton";
+import TextInput from "../../components/inputs/TextInput";
+import PhoneInput from "../../components/PhoneInput";
+import FormSelect from "../../components/select/FormSelect";
+import Progressbar from "../../components/Progressbar";
+import Toast from "../../components/Toast";
+import checkReqiredField from "../../utils/CheckRequired";
+import { useOnboarding } from "../../context/OnboardingContext";
+import {
+  genderOptions,
+  ageRangeOptions,
+  OptionType
+} from "../../utils/lookups";
+import { statesLGAWardList } from "../../utils/StateLGAWard";
+import Loading from "../../components/Loader";
 
+const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 
-interface SelectOptionType {
-  id: number;
-  label: string;
-  value: any;
-  unavailable?: boolean;
-}
+export default function PersonalInfoPage() {
+  const { profileDetails, updateProfileDetails, isLoaded } = useOnboarding();
+  const navigate = useNavigate();
 
-export default function profileDetailsPage() {
-  const { profileDetails, updateProfileDetails } = useOnboarding();
+  // list of required fields for client‑side validation
   const requiredFields = [
-    {
-      label: "First name",
-      value: "first_name",
-    },
-    {
-      label: "Last name",
-      value: "last_name",
-    },
-    {
-      label: "Gender",
-      value: "gender",
-    },
-    {
-      label: "LGA",
-      value: "lga",
-    },
-    {
-      label: "Ward",
-      value: "ward",
-    },
-    {
-      label: "Phone Number",
-      value: "phone_number",
-    },
-    {
-      label: "Age Range",
-      value: "age_range",
-    },
-    {
-      label: "Your State of Origin",
-      value: "state_of_origin",
-    },
-    {
-      label: "State of Voting and Political Engagement",
-      value: "voting_engagement_state",
-    },
+    { label: "First name", value: "first_name" },
+    { label: "Last name", value: "last_name" },
+    { label: "Gender", value: "gender" },
+    { label: "LGA", value: "lga" },
+    { label: "Ward", value: "ward" },
+    { label: "Phone Number", value: "phone_number" },
+    { label: "Age Range", value: "age_range" },
+    { label: "State of Origin", value: "state_of_origin" },
+    { label: "Voting State", value: "voting_engagement_state" },
   ];
 
-  let navigate = useNavigate();
-  const gender = [
-    { id: 1, label: "Male", value: "Male", unavailable: false },
-    { id: 2, label: "Female", value: "Female", unavailable: false },
-  ];
+  // local component state
+  const [states, setStates] = useState<OptionType[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [toast, setToast] = useState<{ type: "success" | "error"; message: string } | null>(null);
 
-  const [toastType, setToastType] = useState<"success" | "error">("success");
-  const [states, setStates] = useState<SelectOptionType[]>([]);
-  const [ageRanges, setAgeRange] = useState<SelectOptionType[]>([]);
-  const [showToast, setShowToast] = useState(false);
-  const [message, setMessage] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  if (!isLoaded) return <Loading />;
 
+  // populate the top‑level states dropdown once
   useEffect(() => {
-    if (states.length === 0) {
-      getStates();
-      getAgeRange();
-    }
+    const s = statesLGAWardList.map((s, i) => ({ id: i, label: s.state, value: s.state }));
+    setStates(s);
   }, []);
 
-
-  async function getStates() {
-    const formattedState = statesLGAWardList.map((state, indx) => {
-      return {
-        id: indx + 1,
-        label: state?.state,
-        value: state?.state,
-        unavailable: false,
-      };
-    });
-
-    setStates(formattedState);
+  // helper: given a state name, return its LGAs
+  function getLga(stateName: string): OptionType[] {
+    const entry = statesLGAWardList.find((s) => s.state === stateName);
+    return entry
+      ? entry.lgas.map((l, i) => ({ id: i, label: l.lga, value: l.lga }))
+      : [];
   }
 
-  function getLga(selectedState = "") { 
-    if (selectedState === "") {
-      return [];
-    }
-
-    const [selectedLga] = statesLGAWardList.filter(
-      (state) => state.state === selectedState
-    );
-
-    const formattedLga = selectedLga?.lgas?.map((lga, indx) => {
-      return {
-        id: indx + 1,
-        label: lga.lga,
-        value: lga.lga,
-        unavailable: false,
-      };
-    });
-    return formattedLga;
-  }
-  function getWard(selectedLga = "", selectedState = "") {
-    if (selectedLga === "" || selectedState === "") {
-      return [];
-    }
-
-    const [StateDetails] = statesLGAWardList.filter(
-      (state) => state.state === selectedState
-    );
-
-    if (!StateDetails) {
-      return [];
-    }
-
-    const [lgaDetails] = StateDetails.lgas.filter(
-      (state) => state.lga === selectedLga
-    );
-
-    if (!lgaDetails) {
-      return [];
-    }
-
-    const formattedLga = lgaDetails?.wards?.map((ward, indx) => {
-      return {
-        id: indx + 1,
-        label: ward,
-        value: ward,
-        unavailable: false,
-      };
-    });
-    return formattedLga;
-  }
-  async function getAgeRange() {
-    const { data } = await supabase.from("age_range").select("id, name");
-    if (data) {
-      setAgeRange(convertData(data));
-    } else {
-      setAgeRange([]);
-    }
+  // helper: given a state+LGA, return its wards
+  function getWard(lgaName: string, stateName: string): OptionType[] {
+    const entry = statesLGAWardList.find((s) => s.state === stateName);
+    const lgaEntry = entry?.lgas.find((l) => l.lga === lgaName);
+    return lgaEntry
+      ? lgaEntry.wards.map((w, i) => ({ id: i, label: w, value: w }))
+      : [];
   }
 
-  async function uploadData() {
-    const { is_ok, message } = checkReqiredField(
-      profileDetails,
-      requiredFields
-    );
+  // form submission
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setToast(null);
 
+    // client‑side check
+    const { is_ok, message } = checkReqiredField(profileDetails, requiredFields);
     if (!is_ok) {
-      console.log(message);
-      setMessage(message);
-      setToastType("error");
-      setShowToast(true);
+      setToast({ type: "error", message });
+      setLoading(false);
       return;
     }
-    const { data } = await supabase.auth.getUser();
-    const userId = data?.user?.id;
-    console.log(profileDetails);
 
-    const memberId = await generateMemberId(profileDetails);
-    const UserDetails = {
-      ...profileDetails,
-      has_onboarded: true,
-      member_id: memberId,
-    };
+    try {
+      const res = await fetch(`${API_BASE}/users/me/personal-info`, {
+        method: "PATCH",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(profileDetails),
 
-    // Insert username into the profile table
-    const { error: updateError } = await supabase
-      .from("profile")
-      .update(UserDetails)
-      .eq("user_id", userId);
-
-    if (updateError) {
-      console.log(`Error: ${updateError.message}`);
-      setMessage(`Error: ${updateError.message}`);
-      setToastType("error");
-      setShowToast(true);
-    } else {
+      });
+      const body = await res.json();
+      if (!res.ok) throw new Error(body.message || "Update failed");
       navigate("/onboarding/security-validation");
+    } catch (err: any) {
+      setToast({ type: "error", message: err.message });
+    } finally {
+      setLoading(false);
     }
-  }
-
-  const handleCloseToast = () => {
-    setShowToast(false);
   };
 
   return (
     <div className="flex flex-col justify-between px-4 py-4 max-w-[450px] w-full gap-8">
       <Progressbar currentNumber={1} />
-      {/* Form Section */}
       <div>
-        <p className="get-started-text xsm:mb-6 md:mb-12 text-gray-dark dark:text-gray-100 text-3xl">
+        <p className="get-started-text xsm:mb-6 md:mb-12 mb-6 text-gray-dark dark:text-gray-100 text-3xl">
           Personal Information
         </p>
-        {/* Peter Gregory Obi */}
-        <form
-          className="grid gap-8"
-          onSubmit={(e) => {
-            setIsLoading(true);
-            e.preventDefault();
-            uploadData();
-            setIsLoading(false);
-          }}
-        >
+        <form onSubmit={handleSubmit} className="grid gap-6">
           <TextInput
             label="First name"
             placeholder="Peter"
-            type="text"
-            value={profileDetails.first_name}
-            onChange={(evt) => {
-              updateProfileDetails({ first_name: evt.target.value });
-            }}
-            required={true}
+            value={profileDetails.first_name || ""}
+            onChange={(e) => updateProfileDetails({ first_name: e.target.value })}
+            required
           />
+
           <TextInput
             label="Middle name"
             placeholder="Gregory"
-            type="text"
-            value={profileDetails.middle_name}
-            onChange={(evt) => {
-              updateProfileDetails({ middle_name: evt.target.value });
-            }}
+            value={profileDetails.middle_name || ""}
+            onChange={(e) => updateProfileDetails({ middle_name: e.target.value })}
           />
 
           <TextInput
             label="Last name"
+            value={profileDetails.last_name || ""}
             placeholder="Obi"
-            type="text"
-            value={profileDetails.last_name}
-            onChange={(evt) => {
-              updateProfileDetails({ last_name: evt.target.value });
-            }}
-            required={true}
+            onChange={(e) => updateProfileDetails({ last_name: e.target.value })}
+            required
           />
 
-          {/* Gender*/}
           <FormSelect
-            required={true}
-            defaultSelected={profileDetails.gender}
             label="Gender"
-            options={gender}
-            onChange={(value) => updateProfileDetails({ gender: value?.value })}
+            options={genderOptions}
+            defaultSelected={profileDetails.gender}
+            onChange={(opt) => { if (opt) updateProfileDetails({ gender: opt.value }) }}
+            required
           />
 
           <FormSelect
-            required={true}
-            defaultSelected={profileDetails.age_range}
             label="Age Range"
-            options={ageRanges}
-            onChange={(value) =>
-              updateProfileDetails({ age_range: value?.value })
-            }
+            options={ageRangeOptions}
+            defaultSelected={profileDetails.age_range}
+            onChange={(opt) => { if (opt) updateProfileDetails({ age_range: opt.value }) }}
+            required
           />
 
           <FormSelect
-            required={true}
-            defaultSelected={profileDetails.state_of_origin}
             label="Your State of Origin"
             options={states}
-            onChange={(value) =>
-              updateProfileDetails({ state_of_origin: value?.value })
-            }
+            defaultSelected={profileDetails.state_of_origin}
+            onChange={(opt) => { if (opt) updateProfileDetails({ state_of_origin: opt.value }) }}
+            required
           />
 
           <PhoneInput
             label="Phone Number"
-            onChange={(phone_number, country_code) =>
-              updateProfileDetails({ phone_number, country_code })
-            }
             defaultPhoneNumber={profileDetails.phone_number}
-            defaultCountryCode={profileDetails.country_code}
+            defaultCountryCode={profileDetails.country_code || "+234"}
+            onChange={(num, cc) => updateProfileDetails({ phone_number: num, country_code: cc })}
           />
 
           <FormSelect
-            required={true}
-            defaultSelected={profileDetails.voting_engagement_state}
-            label="State of Voting and Political Engagement"
+            label="Voting State"
             options={states}
-            onChange={(value) =>
-              updateProfileDetails({ voting_engagement_state: value?.value })
-            }
+            defaultSelected={profileDetails.voting_engagement_state}
+            onChange={(opt) => { if (opt) updateProfileDetails({ voting_engagement_state: opt.value }) }}
+            required
           />
 
           <FormSelect
-            required={true}
-            defaultSelected={profileDetails.lga}
             label="LGA of Voting and Political Engagement"
             options={getLga(profileDetails.voting_engagement_state)}
-            onChange={(value) => updateProfileDetails({ lga: value?.value })}
+            defaultSelected={profileDetails.lga}
+            onChange={(opt) => { if (opt) updateProfileDetails({ lga: opt.value }) }}
+            required
           />
 
           <FormSelect
-            required={true}
-            defaultSelected={profileDetails.ward}
             label="Ward"
-            options={getWard(
-              profileDetails.lga,
-              profileDetails.voting_engagement_state
-            )}
-            onChange={(value) => updateProfileDetails({ ward: value?.value })}
+            options={getWard(profileDetails.lga, profileDetails.voting_engagement_state)}
+            defaultSelected={profileDetails.ward}
+            onChange={(opt) => { if (opt) updateProfileDetails({ ward: opt.value }) }}
+            required
           />
 
-          <NextButton content="Next" disabled={isLoading} />
+          <NextButton content="Next" disabled={loading} />
         </form>
       </div>
-
-      {showToast && (
-        <Toast message={message} type={toastType} onClose={handleCloseToast} />
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
       )}
     </div>
   );
