@@ -21,7 +21,7 @@ export default function ProfileHero({ profile }: { profile: UserProfile }) {
           <div className="flex flex-col md:flex-row items-center gap-8 w-full">
             {/* Profile Image with soft fade-in */}
             <div className="flex-shrink-0">
-              <div className="rounded-full -mt-14 bg-background-dark shadow-md overflow-hidden border-2 border-white w-[250px]">
+              <div className="rounded-full -mt-14 bg-background-dark shadow-md overflow-hidden border-2 border-white w-[250px] h-[250px]">
                 <motion.img
                   src={profile.profile_picture_url || "/photo.png"}
                   alt="Profile"
