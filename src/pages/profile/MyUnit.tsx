@@ -216,7 +216,7 @@ export default function MyUnit() {
               {unitMembers.map((member, index) => (
                 <li key={index} className="py-2 flex justify-between items-center">
                   <span className="capitalize">
-                    {member.personalInfo.first_name || "(Still Onboarding)"} {member.personalInfo.last_name}
+                    {member.personalInfo.first_name || "(Still Onboarding)"} {member.personalInfo.last_name || ""}
                   </span>
                   <span className="text-xs">
                     {member.email}
