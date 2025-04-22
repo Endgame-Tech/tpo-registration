@@ -19,7 +19,6 @@ export function createConfirmationEmailTemplate(confirmationLink) {
     </head>
     <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
       <div style="background: linear-gradient(to right, #0E4C2D, #082114); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
-        <img src="https://res.cloudinary.com/dt9y9vlej/image/upload/v1745312970/logo_rapid8.png" style="width: 150px; margin-bottom: 20px; border-radius: 10px;">
         <h1 style="color: white !important; margin: 0; font-size: 28px;">Confirm Your Email</h1>
       </div>
       <div style="background-color: #ffffff; padding: 30px; border-radius: 0 0 10px 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
@@ -55,7 +54,6 @@ export function createPasswordResetEmailTemplate(resetLink) {
     </head>
     <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
       <div style="background: linear-gradient(to right, #0E4C2D, #082114); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
-        <img src="https://res.cloudinary.com/dt9y9vlej/image/upload/v1745312970/logo_rapid8.png" style="width: 150px; margin-bottom: 20px; border-radius: 10px;">
         <h1 style="color: white !important; margin: 0; font-size: 28px;">Reset Your Password</h1>
       </div>
       <div style="background-color: #ffffff; padding: 30px; border-radius: 0 0 10px 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
@@ -92,7 +90,6 @@ export function createReferralInvitationEmailTemplate(senderName, inviteLink) {
     </head>
     <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
       <div style="background: linear-gradient(to right, #0E4C2D, #082114); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
-        <img src="https://res.cloudinary.com/dt9y9vlej/image/upload/v1745312970/logo_rapid8.png" style="width: 150px; margin-bottom: 20px; border-radius: 10px;">
         <h1 style="color: white !important; margin: 0; font-size: 28px;">Invitation to Join</h1>
       </div>
       <div style="background-color: #ffffff; padding: 30px; border-radius: 0 0 10px 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
