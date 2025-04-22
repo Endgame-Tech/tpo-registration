@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate, useLocation } from "react-router";
 import Toast from "../../components/Toast.js";
 import { XCircleIcon } from "@heroicons/react/24/outline";

@@ -1,12 +1,12 @@
 // src/pages/auth/ResendPage.tsx
 import { useState } from "react";
 import Toast from "../../components/Toast.js";
-import { useNavigate } from "react-router";
+// import { useNavigate } from "react-router";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 
 export default function ResendPage() {
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
   const [toastType, setToastType] = useState<"success" | "error">("success");
