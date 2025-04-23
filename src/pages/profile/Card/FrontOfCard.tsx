@@ -103,8 +103,8 @@ export default function FrontOfCard({ profile }: Props) {
               </div>
             </div>
             <p className="font-normal text-sm text-[#219762] text-center">
-            {profile.member_id}
-          </p>
+              {profile.member_id}
+            </p>
 
           </section>
 

@@ -75,7 +75,7 @@ export default function MyUnit() {
 
       setEmailInput("");
       setToast({ message: "Invitations sent successfully!", type: "success" });
-      loadMyUnit(); // Refresh unit
+      loadMyUnit();
     } catch (err: any) {
       console.error("sendInvites error:", err);
       setToast({ message: err.message || "Failed to send invites", type: "error" });
@@ -93,7 +93,7 @@ export default function MyUnit() {
       if (!res.ok) throw new Error(body.message || "Failed to resend invite");
 
       setToast({ message: "Invitation resent!", type: "success" });
-      loadMyUnit(); // Refresh after resending
+      loadMyUnit();
     } catch (err: any) {
       console.error("resendInvite error:", err);
       setToast({ message: err.message || "Failed to resend invite", type: "error" });
@@ -103,35 +103,26 @@ export default function MyUnit() {
   if (isLoading) return <div>Loading...</div>;
 
   return (
-    <section className="w-full bg-white dark:bg-background-dark rounded-xl shadow-md p-6 mb-10 text-gray-800 dark:text-white flex flex-col gap-8">
-
-      {/* Toast */}
+    <section className="w-full bg-white dark:bg-background-dark rounded-xl shadow-md p-4 sm:p-6 mb-10 text-gray-800 dark:text-white flex flex-col gap-6 sm:gap-8">
       {toast && (
-        <Toast
-          message={toast.message}
-          type={toast.type}
-          onClose={() => setToast(null)}
-        />
+        <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />
       )}
 
-      <h2 className="text-2xl">Your Unit</h2>
+      <h2 className="text-2xl sm:text-2xl font-bold">Your Unit</h2>
 
-      {/* Total Members */}
-      <div className="flex items-center gap-4">
-        <div className="text-6xl text-green-400">{unitMembers.length}</div>
-        <div className="text-lg font-medium">Total Members</div>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4">
+        <div className="text-4xl sm:text-6xl text-green-400">{unitMembers.length}</div>
+        <div className="text-base sm:text-lg font-medium">Total Members</div>
       </div>
 
-      <hr className="dark:border-white/10 border-gray/20 my-4" />
+      <hr className="dark:border-white/10 border-gray-300" />
 
-      {/* Share Link and Invite */}
-      <h2 className="text-2xl">Build your Unit</h2>
+      <h2 className="text-xl sm:text-2xl font-bold">Build your Unit</h2>
 
-      <div className="flex flex-col md:flex-row gap-6">
-        {/* Left */}
-        <div className="flex flex-col bg-background-dark/10 p-6 md:p-8 rounded-2xl dark:bg-background-light/15 gap-6 md:w-1/2">
+      <div className="flex flex-col lg:flex-row gap-6">
+        <div className="flex flex-col bg-background-dark/10 p-4 sm:p-6 rounded-2xl dark:bg-background-light/15 gap-6 lg:w-1/2">
           <div className="space-y-2">
-            <p className="text-lg">Copy and share your link</p>
+            <p className="text-lg font-medium">Copy and share your link</p>
             <div className="flex items-center bg-white dark:bg-background-dark rounded-full overflow-hidden border border-green-500 px-4 py-2">
               <input
                 type="text"
@@ -149,10 +140,10 @@ export default function MyUnit() {
           </div>
 
           <div className="space-y-2">
-            <p className="text-lg">Invite by email</p>
+            <p className="text-lg font-medium">Invite by email</p>
             <input
               type="text"
-              placeholder="If sending multiple emails, separate by a comma"
+              placeholder="Separate multiple emails with commas"
               value={emailInput}
               onChange={(e) => setEmailInput(e.target.value)}
               className="w-full px-4 py-2 rounded-full text-sm bg-white text-gray-800 border border-gray-300 dark:bg-white/70 dark:text-gray-800 placeholder:text-gray-500 dark:border-white/20"
@@ -166,25 +157,22 @@ export default function MyUnit() {
           </div>
         </div>
 
-        {/* Right */}
-        <div className="md:w-1/3 text-sm flex flex-col gap-4">
-          <p className="text-lg md:text-2xl">How you build your Unit</p>
+        <div className="lg:w-1/3 text-sm flex flex-col gap-2 sm:gap-4">
+          <p className="text-lg sm:text-2xl font-semibold">How you build your Unit</p>
           <p>1. Share your link or send a direct invite.</p>
           <p>2. They sign up and automatically join your unit.</p>
           <p>3. Building your unit boosts your credibility.</p>
         </div>
       </div>
 
-      {/* Pending Invites */}
       {pendingInvites.length > 0 && (
         <>
-          <hr className="dark:border-white/10 border-gray/20 my-6" />
-          <div className="p-6 px-8 bg-background-light/10 rounded-3xl">
-
-            <h3 className="text-xl  mb-8">Pending Unit</h3>
+          <hr className="dark:border-white/10 border-gray-300 my-6" />
+          <div className="p-4 sm:p-6 px-4 sm:px-8 bg-background-light/10 rounded-3xl">
+            <h3 className="text-lg sm:text-xl font-bold mb-6">Pending Unit</h3>
             <ul className="divide-y divide-gray-300 dark:divide-white/10">
               {pendingInvites.map((invite) => (
-                <li key={invite._id} className="flex justify-between items-center py-4">
+                <li key={invite._id} className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 py-4">
                   <div className="flex flex-col">
                     <span className="text-sm">{invite.email}</span>
                     <span className="text-xs opacity-60">
@@ -201,26 +189,21 @@ export default function MyUnit() {
               ))}
             </ul>
           </div>
-
         </>
       )}
 
-      {/* Registered Members */}
       {unitMembers.length > 0 && (
         <>
-          <hr className="dark:border-white/10 border-gray/20 my-6" />
-          <div className="p-6 px-8 bg-background-light/10 rounded-3xl">
-
-            <h3 className="text-xl mb-8 ">My Unit Members</h3>
+          <hr className="dark:border-white/10 border-gray-300 my-6" />
+          <div className="p-4 sm:p-6 px-4 sm:px-8 bg-background-light/10 rounded-3xl">
+            <h3 className="text-lg sm:text-xl font-bold mb-6">My Unit Members</h3>
             <ul className="divide-y divide-gray-300 dark:divide-white/10">
               {unitMembers.map((member, index) => (
-                <li key={index} className="py-2 flex justify-between items-center">
+                <li key={index} className="py-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                   <span className="capitalize">
                     {member.personalInfo?.first_name || "(Still Onboarding)"} {member.personalInfo?.last_name || ""}
                   </span>
-                  <span className="text-xs">
-                    {member.email}
-                  </span>
+                  <span className="text-xs">{member.email}</span>
                   <span className="text-xs opacity-60">
                     Joined {new Date(member.createdAt).toLocaleDateString()}
                   </span>

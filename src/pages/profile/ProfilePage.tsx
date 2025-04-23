@@ -20,7 +20,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="flex flex-col items-center w-[1240px] max-w-[1440px] mx-auto gap-4 px-4 py-8">
+    <div className="flex flex-col items-center w-full md:w-[1240px] max-w-[1440px] mx-auto gap-4 py-8">
       <div className=" text-black p-2 w-full rounded-xl mb-8 flex flex-col items-start">
         <ProfileHero profile={profile} />
       </div>
