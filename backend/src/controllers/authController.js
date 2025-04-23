@@ -81,9 +81,10 @@ export const signup = async (req, res) => {
     res.cookie("jwt-tpo", authToken, {
       httpOnly: true,
       maxAge: 3 * 24 * 60 * 60 * 1000,
-      sameSite: "None",
-      secure: process.env.NODE_ENV === "production",
+      sameSite: "None",           // Required for cross-site cookies (Vercel frontend & backend)
+      secure: true,               // Must be true in production for SameSite=None
     });
+
 
     // Build email verification token
     const emailConfirmationToken = jwt.sign(
@@ -127,12 +128,13 @@ export const login = async (req, res) => {
     }
 
     const token = generateAuthToken(user);
-    res.cookie("jwt-tpo", token, {
+    res.cookie("jwt-tpo", authToken, {
       httpOnly: true,
       maxAge: 3 * 24 * 60 * 60 * 1000,
-      sameSite: "None",
-      secure: process.env.NODE_ENV === "production",
+      sameSite: "None",           // Required for cross-site cookies (Vercel frontend & backend)
+      secure: true,               // Must be true in production for SameSite=None
     });
+
     res.json({ message: "Logged in successfully" });
 
   } catch (error) {
