@@ -9,6 +9,9 @@ export default function MyUnit() {
   const { profile, isLoading } = useUser();
   const [unitMembers, setUnitMembers] = useState<any[]>([]);
   const [pendingInvites, setPendingInvites] = useState<any[]>([]);
+  const [sending, setSending] = useState(false);
+  const [resendingId, setResendingId] = useState<string | null>(null);
+
   const [emailInput, setEmailInput] = useState("");
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
 
@@ -57,12 +60,14 @@ export default function MyUnit() {
       setToast({ message: "Please enter valid emails", type: "error" });
       return;
     }
+
     if (emails.length > 10) {
       setToast({ message: "You can invite a maximum of 10 emails at once", type: "error" });
       return;
     }
 
     try {
+      setSending(true);
       const res = await fetch(`${API_BASE}/referrals/send-invite`, {
         method: "POST",
         credentials: "include",
@@ -79,11 +84,14 @@ export default function MyUnit() {
     } catch (err: any) {
       console.error("sendInvites error:", err);
       setToast({ message: err.message || "Failed to send invites", type: "error" });
+    } finally {
+      setSending(false);
     }
   };
 
   const resendInvite = async (inviteId: string) => {
     try {
+      setResendingId(inviteId);
       const res = await fetch(`${API_BASE}/referrals/resend/${inviteId}`, {
         method: "POST",
         credentials: "include",
@@ -97,6 +105,8 @@ export default function MyUnit() {
     } catch (err: any) {
       console.error("resendInvite error:", err);
       setToast({ message: err.message || "Failed to resend invite", type: "error" });
+    } finally {
+      setResendingId(null);
     }
   };
 
@@ -150,10 +160,22 @@ export default function MyUnit() {
             />
             <button
               onClick={sendInvites}
-              className="bg-green-500 rounded-full px-6 py-2 text-sm font-medium self-start hover:bg-green-600"
+              className={`bg-green-500 rounded-full px-6 py-2 text-sm font-medium self-start hover:bg-green-600 ${sending ? "opacity-50 cursor-not-allowed" : ""}`}
+              disabled={sending}
             >
-              Send Invite
+              {sending ? (
+                <span className="flex items-center gap-2">
+                  <svg className="animate-spin h-4 w-4 text-white" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                  </svg>
+                  Sending...
+                </span>
+              ) : (
+                "Send Invite"
+              )}
             </button>
+
           </div>
         </div>
 
@@ -181,10 +203,19 @@ export default function MyUnit() {
                   </div>
                   <button
                     onClick={() => resendInvite(invite._id)}
-                    className="bg-green-500 text-white px-4 py-1 rounded-full text-sm hover:bg-green-600"
+                    className={`bg-green-500 text-white px-4 py-1 rounded-full text-sm hover:bg-green-600 ${resendingId === invite._id ? "opacity-50 cursor-not-allowed" : ""}`}
+                    disabled={resendingId === invite._id}
                   >
-                    Resend Invite
+                    {resendingId === invite._id ? (
+                      <svg className="animate-spin h-4 w-4 mx-auto" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                      </svg>
+                    ) : (
+                      "Resend Invite"
+                    )}
                   </button>
+
                 </li>
               ))}
             </ul>
