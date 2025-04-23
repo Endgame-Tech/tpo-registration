@@ -127,12 +127,12 @@ export const login = async (req, res) => {
       return res.status(400).json({ message: "Invalid email or password!" });
     }
 
-    const token = generateAuthToken(user);
+    const authToken = generateAuthToken(user);
     res.cookie("jwt-tpo", authToken, {
       httpOnly: true,
       maxAge: 3 * 24 * 60 * 60 * 1000,
-      sameSite: "None",           // Required for cross-site cookies (Vercel frontend & backend)
-      secure: true,               // Must be true in production for SameSite=None
+      sameSite: "None",           // ✅ Required for cross-site cookies (Vercel frontend & backend)
+      secure: true,               // ✅ Must be true in production for SameSite=None
     });
 
     res.json({ message: "Logged in successfully" });
