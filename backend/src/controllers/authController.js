@@ -80,9 +80,9 @@ export const signup = async (req, res) => {
     const authToken = generateAuthToken(user);
     res.cookie("jwt-tpo", authToken, {
       httpOnly: true,
-      maxAge: 3 * 24 * 60 * 60 * 1000,
-      sameSite: "None",           // Required for cross-site cookies (Vercel frontend & backend)
-      secure: true,               // Must be true in production for SameSite=None
+      maxAge: 3 * 24 * 60 * 60 * 1000, // 3 days
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // Use "none" for production, "lax" for local
+      secure: process.env.NODE_ENV === "production" ? true : false, // Secure in production (HTTPS)
     });
 
 
@@ -130,9 +130,9 @@ export const login = async (req, res) => {
     const authToken = generateAuthToken(user);
     res.cookie("jwt-tpo", authToken, {
       httpOnly: true,
-      maxAge: 3 * 24 * 60 * 60 * 1000,
-      sameSite: "None",           // ✅ Required for cross-site cookies (Vercel frontend & backend)
-      secure: true,               // ✅ Must be true in production for SameSite=None
+      maxAge: 3 * 24 * 60 * 60 * 1000, // 3 days
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // Use "none" for production, "lax" for local
+      secure: process.env.NODE_ENV === "production" ? true : false, // Secure in production (HTTPS)
     });
 
     res.json({ message: "Logged in successfully" });

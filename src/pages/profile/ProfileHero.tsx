@@ -4,9 +4,19 @@ import { Link } from "react-router";
 import { motion } from "framer-motion";
 import { useState } from "react";
 import MembershipCardModal from "./MembershipCardModal";
+import Loading from "../../components/Loader";
 
-export default function ProfileHero({ profile }: { profile: UserProfile }) {
+export default function ProfileHero({ profile }: { profile: UserProfile | null }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // ⏳ Show loader if profile is still null or undefined
+  if (!profile) {
+    return (
+      <div className="w-full flex justify-center items-center h-[300px]">
+        <Loading />
+      </div>
+    );
+  }
 
   return (
     <>
@@ -39,7 +49,7 @@ export default function ProfileHero({ profile }: { profile: UserProfile }) {
             </div>
           </div>
 
-          {/* QR Code (hidden on large screens if not needed) */}
+          {/* QR Code */}
           <div className="mt-6 sm:mt-0">
             <QRCodeSVG
               value={profile.member_id || "TNNP"}

@@ -9,25 +9,41 @@ const JWT_SECRET = process.env.JWT_SECRET;
  */
 export async function authenticate(req, res, next) {
   try {
-    let token = req.cookies?.['jwt-tpo'];
+    // Check both user and admin cookie names
+    let token =
+      req.cookies?.["jwt-tpo-admin"] || req.cookies?.["jwt-tpo"];
+
     if (!token && req.headers.authorization) {
-      const [scheme, creds] = req.headers.authorization.split(' ');
-      if (scheme === 'Bearer' && creds) token = creds;
+      const [scheme, creds] = req.headers.authorization.split(" ");
+      if (scheme === "Bearer" && creds) token = creds;
     }
+
     if (!token) {
-      console.log('No token found');
-      return res.status(401).json({ message: 'Not authenticated' });
+      console.log("No token found");
+      return res.status(401).json({ message: "Not authenticated" });
     }
-    const decoded = jwt.verify(token, JWT_SECRET);
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const user = await User.findById(decoded.userId).lean();
+
     if (!user) {
-      return res.status(401).json({ message: 'Invalid token' });
+      return res.status(401).json({ message: "Invalid token" });
     }
+
     req.user = user;
     next();
   } catch (err) {
-    console.error('Auth middleware error:', err);
-    res.status(401).json({ message: 'Not authenticated' });
+    console.error("Auth middleware error:", err);
+    res.status(401).json({ message: "Not authenticated" });
   }
 }
+
+
+export const adminOnly = (req, res, next) => {
+  if (!req.user || req.user.role !== "admin") {
+    return res.status(403).json({ message: "Admins only" });
+  }
+  next();
+};
+
 

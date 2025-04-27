@@ -12,6 +12,7 @@ import profileRoutes from './src/routes/profile.js';
 import referralRoutes from './src/routes/referrals.js';
 import uploadRoutes from './src/routes/upload.js';
 import usersRoutes from "./src/routes/users.js";
+import adminRoutes from './src/routes/adminAuth.js'
 
 const app = express();
 
@@ -33,6 +34,7 @@ app.use('/profile', profileRoutes);
 app.use('/referrals', referralRoutes);
 app.use('/upload', uploadRoutes);
 app.use('/users', usersRoutes);
+app.use('/admin', adminRoutes);
 
 // Basic route for testing
 app.get('/', (req, res) => {
