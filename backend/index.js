@@ -23,7 +23,8 @@ const CLIENT_URL = process.env.CLIENT_URL || "http://localhost:5173"; // Default
 
 app.use(cors({
   origin: CLIENT_URL,
-  credentials: true
+  credentials: true,
+  // allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 app.use(express.json());
 app.use(cookieParser());

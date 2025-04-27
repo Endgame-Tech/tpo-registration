@@ -80,7 +80,7 @@ export const signup = async (req, res) => {
     const authToken = generateAuthToken(user);
     res.cookie("jwt-tpo", authToken, {
       httpOnly: true,
-      maxAge: 3 * 24 * 60 * 60 * 1000, // 3 days
+      maxAge: Date.now() + 1000 * 60 * 60 * 24 * 3, // 3 days
       sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // Use "none" for production, "lax" for local
       secure: process.env.NODE_ENV === "production" ? true : false, // Secure in production (HTTPS)
     });
@@ -130,7 +130,7 @@ export const login = async (req, res) => {
     const authToken = generateAuthToken(user);
     res.cookie("jwt-tpo", authToken, {
       httpOnly: true,
-      maxAge: 3 * 24 * 60 * 60 * 1000, // 3 days
+      maxAge: Date.now() + 1000 * 60 * 60 * 24 * 3, // 3 days
       sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // Use "none" for production, "lax" for local
       secure: process.env.NODE_ENV === "production" ? true : false, // Secure in production (HTTPS)
     });
@@ -269,4 +269,3 @@ export const resendConfirmation = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
-

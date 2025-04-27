@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"; 
+import { useState, useEffect } from "react";
 import { useNavigate, useLocation, Link } from "react-router";
 import Toast from "../../components/Toast.js";
 import {
