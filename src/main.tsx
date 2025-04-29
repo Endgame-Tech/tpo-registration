@@ -24,11 +24,11 @@ import PersonalInfoPage from "./pages/onboarding/PersonalInfo.tsx";
 import SecurityValidationPage from "./pages/onboarding/SecurityValidationPage.tsx";
 import DemographicsPage from "./pages/onboarding/Demographics.tsx";
 import VoterRegistrationInformationPage from "./pages/onboarding/VoterRegistrationInformation.tsx";
-import PoliticalPrefrencesPage from "./pages/onboarding/PoliticalPreferences.tsx";
-import EngagementAndMobilizationPage from "./pages/onboarding/EngagementAndMobilization.tsx";
-import VotingBehaviorPage from "./pages/onboarding/VotingBehavior.tsx";
-import TechnologyAndAccessPage from "./pages/onboarding/TechnologyAndAccess.tsx";
-import SurveyQuestionsPage from "./pages/onboarding/SurveyQuestions.tsx";
+// import PoliticalPrefrencesPage from "./pages/onboarding/PoliticalPreferences.tsx";
+// import EngagementAndMobilizationPage from "./pages/onboarding/EngagementAndMobilization.tsx";
+// import VotingBehaviorPage from "./pages/onboarding/VotingBehavior.tsx";
+// import TechnologyAndAccessPage from "./pages/onboarding/TechnologyAndAccess.tsx";
+// import SurveyQuestionsPage from "./pages/onboarding/SurveyQuestions.tsx";
 
 // Profile
 import ProfileLayout from "./pages/profile/page.tsx";
