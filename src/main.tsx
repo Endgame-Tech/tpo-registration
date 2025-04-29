@@ -75,17 +75,17 @@ const router = createBrowserRouter([
         path: "voter-registration-information",
         element: <VoterRegistrationInformationPage />,
       },
-      { path: "political-preferences", element: <PoliticalPrefrencesPage /> },
-      {
-        path: "engagement-and-mobilization",
-        element: <EngagementAndMobilizationPage />,
-      },
-      { path: "voting-behavior", element: <VotingBehaviorPage /> },
-      {
-        path: "technology-and-access",
-        element: <TechnologyAndAccessPage />,
-      },
-      { path: "survey-questions", element: <SurveyQuestionsPage /> },
+      // { path: "political-preferences", element: <PoliticalPrefrencesPage /> },
+      // {
+      //   path: "engagement-and-mobilization",
+      //   element: <EngagementAndMobilizationPage />,
+      // },
+      // { path: "voting-behavior", element: <VotingBehaviorPage /> },
+      // {
+      //   path: "technology-and-access",
+      //   element: <TechnologyAndAccessPage />,
+      // },
+      // { path: "survey-questions", element: <SurveyQuestionsPage /> },
     ],
   },
   {

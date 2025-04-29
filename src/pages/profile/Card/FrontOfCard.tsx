@@ -40,13 +40,7 @@ export default function FrontOfCard({ profile }: Props) {
 
             <div className="text-2xl mt-4 font-bold text-[#219762]">
               <p className="-mb-2">
-                {`${profile.first_name || ""}`}
-              </p>
-              <p className="-mb-2">
-                {`${profile.middle_name || ""}`}
-              </p>
-              <p className="-mb-2">
-                {`${profile.last_name || ""}`}
+                {`${profile.user_name || ""}`}
               </p>
             </div>
 

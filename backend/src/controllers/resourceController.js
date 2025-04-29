@@ -11,6 +11,33 @@ export const getAllResources = async (req, res) => {
   }
 };
 
+export const searchResources = async (req, res) => {
+  try {
+    const query = req.query.q;
+
+    if (!query) {
+      return res.status(400).json({ message: "Missing search query" });
+    }
+
+    const regex = new RegExp(query, "i"); // case-insensitive search
+
+    const results = await Resource.find({
+      $or: [
+        { title: regex },
+        { sub_title: regex },
+        { author: regex }
+      ]
+    })
+      .limit(5)
+      .select('resource_id title sub_title author'); // only select necessary fields
+
+    res.json(results);
+  } catch (error) {
+    console.error("Error searching resources:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
 export const createResource = async (req, res) => {
   try {
     const { title, sub_title, resource_url, author, image_base64 } = req.body;
@@ -29,7 +56,7 @@ export const createResource = async (req, res) => {
       resource_url,
       author,
       images_url: imageUrl,
-      created_by: req.user._id,
+      // created_by: req.user._id,
     });
 
     const saved = await newResource.save();

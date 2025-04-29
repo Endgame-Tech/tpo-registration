@@ -4,11 +4,11 @@ type ProgressProps = {
   currentNumber: number;
 };
 export default function Progressbar({ currentNumber }: ProgressProps) {
-  const maxNumber: number = 9;
+  const maxNumber: number = 4;
   const checkpoints = Array.from({ length: maxNumber }, (_, i) => i + 1);
 
   return (
-    <div className="flex justify-between w-full gap-1 text-sm">
+    <div className="flex justify-start mb-6 w-full gap-12 text-sm">
       {checkpoints.map((checkpoint) => {
         return checkpoint < currentNumber ? (
               <div

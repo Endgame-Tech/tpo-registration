@@ -15,7 +15,7 @@ export const getMyUnit = async (req, res) => {
 
     // Now, find registered users referred by me
     const members = await User.find({ referred_by: user.member_id })
-      .select("personalInfo.first_name personalInfo.last_name createdAt email")
+      .select("personalInfo.first_name personalInfo.last_name personalInfo.phone_number createdAt email")
       .sort({ createdAt: -1 });
 
     // Find pending invites I sent
@@ -47,7 +47,7 @@ export const sendReferralInvites = async (req, res) => {
     }
 
     const inviteLink = `${process.env.CLIENT_URL || "http://localhost:5173"}/auth/sign-up?ref=${user.member_id}`;
-    const senderName = `${user.personalInfo?.first_name || ""} ${user.personalInfo?.last_name || ""}`;
+    const senderName = `${user.personalInfo?.user_name || ""}`;
 
     const invalidEmails = [];
     const alreadyRegistered = [];

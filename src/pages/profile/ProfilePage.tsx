@@ -27,7 +27,7 @@ export default function ProfilePage() {
       <div className="p-0 w-full">
         <MyUnit />
       </div>
-      <div>
+      <div className="w-full p-4">
         <PartyUpdates />
       </div>
     </div>

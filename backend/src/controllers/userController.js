@@ -1,6 +1,27 @@
 import User from '../models/User.js';
 import { generateMemberId } from "../utils/generateMemberId.js";
 
+export const checkUserName = async (req, res) => {
+  try {
+    const { user_name } = req.query;
+
+    if (!user_name) {
+      return res.status(400).json({ message: "Username is required" });
+    }
+
+    const existingUser = await User.findOne({ "personalInfo.user_name": user_name });
+
+    if (existingUser) {
+      return res.json({ exists: true });
+    } else {
+      return res.json({ exists: false });
+    }
+  } catch (err) {
+    console.error("checkUserName error:", err);
+    return res.status(500).json({ message: "Server error" });
+  }
+};
+
 export const getCurrentUser = async (req, res) => {
   try {
     const user = await User.findById(req.user._id).lean();
@@ -23,6 +44,44 @@ export const getCurrentUser = async (req, res) => {
   } catch (err) {
     console.error('getCurrentUser error:', err);
     res.status(500).json({ message: 'Server error' });
+  }
+};
+
+export const getAllUsers = async (req, res) => {
+  try {
+    const users = await User.find().select("-passwordHash").sort({ createdAt: -1 });
+    res.json(users);
+  } catch (err) {
+    console.error("Error fetching users:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+export const searchUsers = async (req, res) => {
+  try {
+    const query = req.query.q;
+
+    if (!query) {
+      return res.status(400).json({ message: "Missing search query" });
+    }
+
+    const regex = new RegExp(query, "i"); // case-insensitive search
+
+    const results = await User.find({
+      $or: [
+        { "personalInfo.first_name": regex },
+        { "personalInfo.last_name": regex },
+        { "personalInfo.middle_name": regex },
+        { email: regex },
+      ]
+    })
+      .limit(5)
+      .select('personalInfo.first_name personalInfo.middle_name personalInfo.last_name email member_id'); // select necessary fields only
+
+    res.json(results);
+  } catch (error) {
+    console.error("Error searching users:", error);
+    res.status(500).json({ message: "Server error" });
   }
 };
 
@@ -118,7 +177,7 @@ export const updateDemographics = async (req, res) => {
 
 export const updateVoterRegistration = async (req, res) => {
   try {
-    const { is_registered, voter_id_number, registration_date } = req.body;
+    const { is_registered, registration_date, preferred_method_of_communication, has_onboarded } = req.body;
 
     const user = await User.findById(req.user._id);
     if (!user) return res.status(404).json({ message: "User not found" });
@@ -126,9 +185,12 @@ export const updateVoterRegistration = async (req, res) => {
     user.onboardingData.votingBehavior = {
       ...user.onboardingData.votingBehavior,
       is_registered,
-      voter_id_number,
       registration_date,
+      preferred_method_of_communication,
     };
+
+    if (has_onboarded) user.has_onboarded = true;
+
 
     await user.save();
 

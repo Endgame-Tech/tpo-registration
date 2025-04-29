@@ -13,6 +13,7 @@ import referralRoutes from './src/routes/referrals.js';
 import uploadRoutes from './src/routes/upload.js';
 import usersRoutes from "./src/routes/users.js";
 import adminRoutes from './src/routes/adminAuth.js'
+import resourcesRoutes from './src/routes/resources.js';
 
 const app = express();
 
@@ -36,6 +37,7 @@ app.use('/referrals', referralRoutes);
 app.use('/upload', uploadRoutes);
 app.use('/users', usersRoutes);
 app.use('/admin', adminRoutes);
+app.use('/resources', resourcesRoutes);
 
 // Basic route for testing
 app.get('/', (req, res) => {

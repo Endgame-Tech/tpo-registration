@@ -6,6 +6,7 @@ export interface UserProfile {
   first_name: string;
   middle_name: string;
   last_name: string;
+  user_name: string;
   phone_number: string;
   country_code?: string;
   gender: string;

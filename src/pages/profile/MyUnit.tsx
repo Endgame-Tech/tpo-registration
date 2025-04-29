@@ -187,6 +187,7 @@ export default function MyUnit() {
         </div>
       </div>
 
+      {/* Pending Unit */}
       {pendingInvites.length > 0 && (
         <>
           <hr className="dark:border-white/10 border-gray-300 my-6" />
@@ -223,27 +224,58 @@ export default function MyUnit() {
         </>
       )}
 
+      {/* My Unit */}
       {unitMembers.length > 0 && (
         <>
           <hr className="dark:border-white/10 border-gray-300 my-6" />
           <div className="p-4 sm:p-6 px-4 sm:px-8 bg-background-light/10 rounded-3xl">
             <h3 className="text-lg sm:text-xl font-bold mb-6">My Unit Members</h3>
             <ul className="divide-y divide-gray-300 dark:divide-white/10">
-              {unitMembers.map((member, index) => (
-                <li key={index} className="py-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-                  <span className="capitalize">
-                    {member.personalInfo?.first_name || "(Still Onboarding)"} {member.personalInfo?.last_name || ""}
-                  </span>
-                  <span className="text-xs">{member.email}</span>
-                  <span className="text-xs opacity-60">
-                    Joined {new Date(member.createdAt).toLocaleDateString()}
-                  </span>
-                </li>
-              ))}
+              {unitMembers.map((member, index) => {
+                const phoneNumber = member.personalInfo?.phone_number || "";
+                const countryCode = member.personalInfo?.country_code || "+234";
+
+                // Format the phone number properly
+                let formattedPhone = phoneNumber.startsWith("0")
+                  ? countryCode + phoneNumber.slice(1)
+                  : countryCode + phoneNumber;
+
+                // Remove any "+" for wa.me link (it must not have "+" sign)
+                formattedPhone = formattedPhone.replace("+", "");
+
+                const whatsappLink = `https://wa.me/${formattedPhone}`;
+
+                return (
+                  <li key={index} className="py-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                    <div className="flex flex-col md:flex-row w-full justify-between items-start md:items-center gap-2">
+                      <span className="capitalize">
+                        {phoneNumber || "(Still Onboarding)"}
+                      </span>
+                      <span className="text-sm">{member.email}</span>
+                      <span className="text-xs opacity-60">
+                        Joined {new Date(member.createdAt).toLocaleDateString()}
+                      </span>
+                      {phoneNumber && (
+                        <a
+                          href={whatsappLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="bg-green-500 hover:bg-green-600 text-white text-sm px-4 py-2 rounded-full"
+                        >
+                          Message on WhatsApp
+                        </a>
+                      )}
+                    </div>
+
+
+                  </li>
+                );
+              })}
             </ul>
           </div>
         </>
       )}
+
     </section>
   );
 }

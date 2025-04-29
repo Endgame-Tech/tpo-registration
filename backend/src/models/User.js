@@ -7,6 +7,7 @@ const PersonalInfoSchema = new Schema({
   first_name: { type: String },
   middle_name: { type: String },
   last_name: { type: String },
+  user_name: { type: String },
   phone_number: { type: String },
   country_code: { type: String },
   gender: { type: String },
@@ -38,7 +39,7 @@ const OnboardingDataSchema = new Schema({
   engagementAndMobilization: {
     is_volunteering: { type: String },
     past_election_participation: { type: String },
-    preferred_method_of_communication: [{ type: String }],
+  
   },
   technologyAccess: {
     has_internet_access: { type: String },
@@ -49,7 +50,8 @@ const OnboardingDataSchema = new Schema({
     likely_to_vote: { type: String },
     is_registered: { type: String },
     registration_date: { type: String },
-    voter_id_number: { type: String },
+    // voter_id_number: { type: String },
+    preferred_method_of_communication: [{ type: String }],
   },
   surveyQuestions: {
     vote_impact: { type: String },
@@ -64,6 +66,7 @@ const UserSchema = new Schema({
   is_verified_user: { type: Boolean, default: false },
   emailVerified: { type: Boolean, default: false },
   member_id: { type: String },
+  is_active: { type: Boolean, default: true },
 
   role: {
     type: String,

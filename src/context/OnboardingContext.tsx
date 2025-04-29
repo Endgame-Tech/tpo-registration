@@ -11,6 +11,7 @@ export interface ProfileDetails {
   first_name: string;
   middle_name: string;
   last_name: string;
+  user_name: string;
   phone_number: string;
   country_code?: string;
   gender: string;
@@ -59,6 +60,7 @@ export interface ProfileDetails {
 
   role: "member" | "verified" | "admin";
   emailVerified: boolean;
+  is_active: boolean;
 }
 
 // 2. Context payload type including loading flag
@@ -80,6 +82,7 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
     first_name: "",
     middle_name: "",
     last_name: "",
+    user_name: "",
     phone_number: "",
     country_code: "",
     gender: "",
@@ -121,6 +124,7 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
 
     role: "member",
     emailVerified: false,
+    is_active: true,
 
   });
   // loading flag
@@ -163,6 +167,7 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
           member_id: user.member_id || prev.member_id,
           role: user.role || prev.role,
           emailVerified: user.emailVerified || prev.emailVerified,
+          is_active: user.is_active || prev.is_active,
         }));
       } catch (err) {
         console.error("OnboardingContext load error:", err);

@@ -1,8 +1,9 @@
 // src/routes/users.js
 import express from 'express';
-import { authenticate } from "../middleware/auth.js";
+import { adminOnly, authenticate } from "../middleware/auth.js";
 import {
   getCurrentUser,
+  getAllUsers,
   updatePersonalInfo,
   updateSecurityValidation,
   updateDemographics,
@@ -12,13 +13,19 @@ import {
   updateVotingBehavior,
   updateTechnologyAndAccess,
   updateSurveyQuestions,
-  checkMemberId
+  checkMemberId,
+  searchUsers,
+  checkUserName
 } from "../controllers/userController.js";
 
 const router = express.Router();
 
+router.get("/check-username", checkUserName);
+
 // Fetch full user document (minus sensitive fields)
-router.get("/me", authenticate, getCurrentUser);
+router.get("/me", authenticate, adminOnly, getCurrentUser);
+router.get("/search", authenticate, adminOnly, searchUsers);
+router.get("/", authenticate, adminOnly, getAllUsers);
 
 // Update personal info (name, phone, address, etc)
 router.patch("/me/personal-info", authenticate, updatePersonalInfo);

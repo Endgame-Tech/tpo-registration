@@ -42,7 +42,7 @@ export default function ProfileHero({ profile }: { profile: UserProfile | null }
             {/* Name and Info */}
             <div className="flex flex-col items-center sm:items-start text-center sm:text-left gap-1 mt-6 sm:mt-14 max-w-xs sm:max-w-sm">
               <h1 className="text-2xl sm:text-4xl font-[800] text-white">
-                {profile.first_name} {profile.middle_name} {profile.last_name}
+                {profile.user_name}
               </h1>
               <p className="text-gray-400 text-sm">{profile.occupation || "N/A"}</p>
               <p className="text-gray-400 text-sm">{profile.state_of_origin || "N/A"} State</p>

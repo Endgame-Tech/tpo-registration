@@ -1,25 +1,44 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router";
 import NextButton from "../../components/NextButton";
 import Progressbar from "../../components/Progressbar";
 import Toast from "../../components/Toast";
 import RadioComp from "../../components/buttons/radio";
 import FormSelect from "../../components/select/FormSelect";
-import TextInput from "../../components/inputs/TextInput";
+// import TextInput from "../../components/inputs/TextInput";
 import checkRequiredField from "../../utils/CheckRequired";
 import { useOnboarding } from "../../context/OnboardingContext";
+import MultiSelectComp from "../../components/multi_select/MultiSelectComp";
+import { OptionType } from "../../utils/lookups";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 
 export default function VoterRegistrationInformationPage() {
   const navigate = useNavigate();
   const { profileDetails, updateProfileDetails, isLoaded } = useOnboarding();
+  const [selectedOptions, setSelectedOptions] = useState<OptionType[]>([]);
+
 
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState<{ type: "success" | "error"; message: string } | null>(null);
 
+  const preferred_method_of_communication = [
+    { id: 1, label: "Call", value: "call" },
+    { id: 2, label: "Email", value: "email" },
+    { id: 3, label: "Whatsapp", value: "whatsapp" },
+    { id: 4, label: "Text Message", value: "text message" },
+  ];
+
+  useEffect(() => {
+    const selected = preferred_method_of_communication.filter(opt =>
+      profileDetails.preferred_method_of_communication?.includes(opt.value)
+    );
+    setSelectedOptions(selected);
+  }, [profileDetails.preferred_method_of_communication]);
+
   const requiredFields = [
     { label: "Are you Registered to Vote?", value: "is_registered" },
+    { label: "Preferred Method of Communication", value: "preferred_method_of_communication" },
     { label: "Voter Registration Year", value: "registration_date" },
   ];
 
@@ -56,14 +75,16 @@ export default function VoterRegistrationInformationPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           is_registered: profileDetails.is_registered,
-          voter_id_number: profileDetails.voter_id_number,
+          // voter_id_number: profileDetails.voter_id_number,
           registration_date: profileDetails.registration_date,
+          preferred_method_of_communication: profileDetails.preferred_method_of_communication,
+          has_onboarded: true,
         }),
       });
       const body = await res.json();
       if (!res.ok) throw new Error(body.message || "Update failed");
 
-      navigate("/onboarding/political-preferences");
+      navigate("/profile");
     } catch (err: any) {
       setToast({ type: "error", message: err.message });
     } finally {
@@ -97,20 +118,33 @@ export default function VoterRegistrationInformationPage() {
             required
           />
 
-          <TextInput
+          {/* <TextInput
             label="Voter Identification Number (VIN)"
             placeholder="9018 XXXX XXXX XXXX XXXX"
             type="text"
             value={profileDetails.voter_id_number || ""}
             onChange={(e) => updateProfileDetails({ voter_id_number: e.target.value })}
             required={false}
-          />
+          /> */}
 
           <FormSelect
             label="Voter Registration Year"
             options={getYears()}
             defaultSelected={profileDetails.registration_date}
             onChange={(opt) => opt && updateProfileDetails({ registration_date: opt.value })}
+            required
+          />
+
+          <MultiSelectComp
+            label="Preferred Method of Communication"
+            options={preferred_method_of_communication}
+            defaultSelected={selectedOptions}
+            onChange={(value: OptionType[]) => {
+              setSelectedOptions(value);
+              const selectedValues = value.map(opt => opt.value);
+              updateProfileDetails({ preferred_method_of_communication: selectedValues });
+            }
+            }
             required
           />
 

@@ -15,6 +15,9 @@ import {
 } from "../../utils/lookups";
 import { statesLGAWardList } from "../../utils/StateLGAWard";
 import Loading from "../../components/Loader";
+import { CheckCircleIcon } from "@heroicons/react/24/solid";
+import { XCircleIcon } from "@heroicons/react/24/outline";
+
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 
@@ -24,8 +27,9 @@ export default function PersonalInfoPage() {
 
   // list of required fields for client‑side validation
   const requiredFields = [
-    { label: "First name", value: "first_name" },
-    { label: "Last name", value: "last_name" },
+    // { label: "First name", value: "first_name" },
+    // { label: "Last name", value: "last_name" },
+    { label: "Username or Nickname", value: "user_name" },
     { label: "Gender", value: "gender" },
     { label: "LGA", value: "lga" },
     { label: "Ward", value: "ward" },
@@ -39,6 +43,9 @@ export default function PersonalInfoPage() {
   const [states, setStates] = useState<OptionType[]>([]);
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState<{ type: "success" | "error"; message: string } | null>(null);
+
+  const [usernameAvailable, setUsernameAvailable] = useState<null | boolean>(null);
+  const [checkingUsername, setCheckingUsername] = useState(false);
 
   if (!isLoaded) return <Loading />;
 
@@ -64,6 +71,29 @@ export default function PersonalInfoPage() {
       ? lgaEntry.wards.map((w, i) => ({ id: i, label: w, value: w }))
       : [];
   }
+
+  const checkUsername = async (username: string) => {
+    if (!username) {
+      setUsernameAvailable(null);
+      return;
+    }
+
+    try {
+      setCheckingUsername(true);
+      const res = await fetch(`${API_BASE}/users/check-username?user_name=${encodeURIComponent(username)}`);
+      const body = await res.json();
+      if (res.ok) {
+        setUsernameAvailable(!body.exists); // true if available
+      } else {
+        setUsernameAvailable(null);
+      }
+    } catch (error) {
+      console.error("Username check error:", error);
+      setUsernameAvailable(null);
+    } finally {
+      setCheckingUsername(false);
+    }
+  };
 
   // form submission
   const handleSubmit = async (e: React.FormEvent) => {
@@ -106,27 +136,45 @@ export default function PersonalInfoPage() {
         </p>
         <form onSubmit={handleSubmit} className="grid gap-6">
           <TextInput
-            label="First name"
+            label="Username or Nickname"
             placeholder="Peter"
-            value={profileDetails.first_name || ""}
-            onChange={(e) => updateProfileDetails({ first_name: e.target.value })}
+            value={profileDetails.user_name || ""}
+            onChange={(e) => {
+              updateProfileDetails({ user_name: e.target.value });
+              checkUsername(e.target.value); // run check while typing
+            }}
             required
           />
 
-          <TextInput
+          {checkingUsername ? (
+            <p className="text-sm text-gray-400">Checking username availability...</p>
+          ) : usernameAvailable === true ? (
+            <div className="flex gap-1 items-center">
+              <CheckCircleIcon className="fill-accent-green size-4" />
+              <p className="text-sm text-green-400">Username is available</p>
+            </div>
+
+          ) : usernameAvailable === false ? (
+            <div className="flex gap-1 items-center">
+              <XCircleIcon className="fill-accent-red size-6 text-background-dark" />
+              <p className="text-sm text-red-400">Username already taken</p>
+            </div>
+          ) : null}
+
+          {/* <TextInput
             label="Middle name"
             placeholder="Gregory"
             value={profileDetails.middle_name || ""}
             onChange={(e) => updateProfileDetails({ middle_name: e.target.value })}
-          />
+          /> */}
 
-          <TextInput
+          {/* <TextInput
             label="Last name"
             value={profileDetails.last_name || ""}
             placeholder="Obi"
             onChange={(e) => updateProfileDetails({ last_name: e.target.value })}
             required
-          />
+          /> */}
 
           <FormSelect
             label="Gender"
@@ -153,7 +201,7 @@ export default function PersonalInfoPage() {
           />
 
           <PhoneInput
-            label="Phone Number"
+            label="WhatsApp Phone Number"
             defaultPhoneNumber={profileDetails.phone_number}
             defaultCountryCode={profileDetails.country_code || "+234"}
             onChange={(num, cc) => updateProfileDetails({ phone_number: num, country_code: cc })}
