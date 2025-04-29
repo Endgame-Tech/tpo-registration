@@ -23,7 +23,7 @@ const router = express.Router();
 router.get("/check-username", checkUserName);
 
 // Fetch full user document (minus sensitive fields)
-router.get("/me", authenticate, adminOnly, getCurrentUser);
+router.get("/me", authenticate, getCurrentUser);
 router.get("/search", authenticate, adminOnly, searchUsers);
 router.get("/", authenticate, adminOnly, getAllUsers);
 
