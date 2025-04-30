@@ -133,16 +133,16 @@ export default function MyUnit() {
         <div className="flex flex-col bg-background-dark/10 p-4 sm:p-6 rounded-2xl dark:bg-background-light/15 gap-6 lg:w-1/2">
           <div className="space-y-2">
             <p className="text-lg font-medium">Copy and share your link</p>
-            <div className="flex items-center bg-white dark:bg-background-dark rounded-full overflow-hidden border border-green-500 px-4 py-2">
+            <div className="flex items-center justify-between bg-white dark:bg-background-dark rounded-full overflow-hidden border border-green-500 px-4 py-2">
               <input
                 type="text"
                 readOnly
                 value={referralLink}
-                className="flex-1 text-sm px-4 py-2 bg-transparent text-green-400"
+                className="flex-1 text-xs px-4 py-2 bg-transparent text-green-400"
               />
               <button
                 onClick={handleCopy}
-                className="bg-green-500 z-10 rounded-3xl text-white px-4 py-2 text-sm hover:bg-green-600"
+                className="bg-green-500 rounded-3xl text-white px-4 py-2 text-xs hover:bg-green-600"
               >
                 Copy
               </button>
@@ -156,7 +156,7 @@ export default function MyUnit() {
               placeholder="Separate multiple emails with commas"
               value={emailInput}
               onChange={(e) => setEmailInput(e.target.value)}
-              className="w-full px-4 py-2 rounded-full text-sm bg-white text-gray-800 border border-gray-300 dark:bg-white/70 dark:text-gray-800 placeholder:text-gray-500 dark:border-white/20"
+              className="w-full px-4 py-2 placeholder:text-xs rounded-full text-sm bg-white text-gray-800 border border-gray-300 dark:bg-white/70 dark:text-gray-800 placeholder:text-gray-500 dark:border-white/20"
             />
             <button
               onClick={sendInvites}
