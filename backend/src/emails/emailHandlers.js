@@ -1,4 +1,3 @@
-// utils/emailHandlers.js - FIXED VERSION
 import { mailtrapClient, sender } from '../config/mailtrap.js';
 import {
   createConfirmationEmailTemplate,
@@ -20,6 +19,12 @@ export const sendConfirmationEmail = async (email, confirmationLink) => {
       subject: "Confirm Your Email Address",
       html: createConfirmationEmailTemplate(confirmationLink), // Removed name parameter
       category: "email_confirmation",
+      headers: {
+        "X-Priority": "1",
+        "Importance": "high",
+        "X-MSMail-Priority": "High",
+        "List-Unsubscribe": "<mailto:noreply@thepeoplesopposition.org>",
+      }
     });
     console.log("Confirmation email sent successfully:", response);
     return response;
@@ -43,6 +48,12 @@ export const sendPasswordResetEmail = async (email, resetLink) => {
       subject: "Reset Your Password",
       html: createPasswordResetEmailTemplate(resetLink),
       category: "password_reset",
+      headers: {
+        "X-Priority": "1",
+        "Importance": "high",
+        "X-MSMail-Priority": "High",
+        "List-Unsubscribe": "<mailto:noreply@thepeoplesopposition.org>",
+      }
     });
     console.log("Password reset email sent successfully:", response);
     return response;
@@ -67,6 +78,12 @@ export const sendReferralInvitationEmail = async (email, senderName, inviteLink)
       subject: "Invitation to Join The People's Opposition",
       html: createReferralInvitationEmailTemplate(senderName, inviteLink),
       category: "referral_invitation",
+      headers: {
+        "X-Priority": "1",
+        "Importance": "high",
+        "X-MSMail-Priority": "High",
+        "List-Unsubscribe": "<mailto:noreply@thepeoplesopposition.org>",
+      }
     });
     console.log("Referral invitation email sent successfully:", response);
     return response;

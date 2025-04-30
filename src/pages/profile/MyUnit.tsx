@@ -142,7 +142,7 @@ export default function MyUnit() {
               />
               <button
                 onClick={handleCopy}
-                className="bg-green-500 rounded-3xl text-white px-4 py-2 text-sm hover:bg-green-600"
+                className="bg-green-500 z-10 rounded-3xl text-white px-4 py-2 text-sm hover:bg-green-600"
               >
                 Copy
               </button>
