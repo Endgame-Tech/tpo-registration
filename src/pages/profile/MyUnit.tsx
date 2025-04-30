@@ -133,19 +133,23 @@ export default function MyUnit() {
         <div className="flex flex-col bg-background-dark/10 p-4 sm:p-6 rounded-2xl dark:bg-background-light/15 gap-6 lg:w-1/2">
           <div className="space-y-2">
             <p className="text-lg font-medium">Copy and share your link</p>
-            <div className="flex items-center justify-between bg-white dark:bg-background-dark rounded-full overflow-hidden border border-green-500 px-4 py-2">
-              <input
-                type="text"
-                readOnly
-                value={referralLink}
-                className="flex-1 text-xs px-4 py-2 bg-transparent text-green-400"
-              />
-              <button
-                onClick={handleCopy}
-                className="bg-green-500 rounded-3xl text-white px-4 py-2 text-xs hover:bg-green-600"
-              >
-                Copy
-              </button>
+            <div className="flex items-center justify-between bg-white dark:bg-background-dark rounded-full border border-green-500 px-4 py-2">
+              <div className=" flex overflow-hidden w-full">
+                <input
+                  type="text"
+                  readOnly
+                  value={referralLink}
+                  className="flex-1 text-xs px-4 py-2 bg-transparent text-green-400"
+                />
+              </div>
+              <div>
+                <button
+                  onClick={handleCopy}
+                  className="bg-green-500 rounded-3xl text-white px-4 py-2 text-xs hover:bg-green-600"
+                >
+                  Copy
+                </button>
+              </div>
             </div>
           </div>
 
