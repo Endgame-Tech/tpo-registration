@@ -22,8 +22,12 @@ import { XCircleIcon } from "@heroicons/react/24/outline";
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 
 export default function PersonalInfoPage() {
-  const { profileDetails, updateProfileDetails, isLoaded } = useOnboarding();
-  const navigate = useNavigate();
+
+
+  const onboarding = useOnboarding();
+  if (!onboarding?.isLoaded) return <Loading />;
+  const { profileDetails, updateProfileDetails } = onboarding;
+
 
   // list of required fields for client‑side validation
   const requiredFields = [
@@ -38,6 +42,7 @@ export default function PersonalInfoPage() {
     { label: "State of Origin", value: "state_of_origin" },
     { label: "Voting State", value: "voting_engagement_state" },
   ];
+  const navigate = useNavigate();
 
   // local component state
   const [states, setStates] = useState<OptionType[]>([]);
@@ -47,7 +52,6 @@ export default function PersonalInfoPage() {
   const [usernameAvailable, setUsernameAvailable] = useState<null | boolean>(null);
   const [checkingUsername, setCheckingUsername] = useState(false);
 
-  if (!isLoaded) return <Loading />;
 
   // populate the top‑level states dropdown once
   useEffect(() => {

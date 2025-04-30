@@ -63,7 +63,7 @@ export default function ProfileHero({ profile }: { profile: UserProfile | null }
 
         {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 p-6 sm:px-10">
-          <Link to={"/onboarding"}>
+          <Link to={"/onboarding/personal-info"}>
             <button className="bg-white text-black font-semibold py-2 rounded-3xl w-full sm:w-40 hover:bg-gray-200 transition">
               EDIT PROFILE
             </button>
