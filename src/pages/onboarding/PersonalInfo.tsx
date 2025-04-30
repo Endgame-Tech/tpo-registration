@@ -128,7 +128,7 @@ export default function PersonalInfoPage() {
   };
 
   return (
-    <div className="flex flex-col justify-between px-4 py-4 max-w-[450px] w-full gap-8">
+    <div className="flex flex-col justify-between px-4 py-6 pb-12 max-w-[450px] w-full gap-8">
       <Progressbar currentNumber={1} />
       <div>
         <p className="get-started-text xsm:mb-6 md:mb-12 mb-6 text-gray-dark dark:text-gray-100 text-3xl">

@@ -48,13 +48,13 @@ export default function Select({
     <Listbox value={selectedOption} onChange={onSelectItem} >
       <ListboxButton
         className={clsx(
-                   "relative  rounded-lg bg-gray-200 dark:bg-secondary-light p-3 text-left text-sm/6 text-white w-full flex items-center justify-between",
+                   "relative rounded-lg bg-gray-200 dark:bg-secondary-light p-3 text-left text-sm/6 text-black/80 dark:text-white w-full flex items-center justify-between",
           "focus:outline-none data-[focus]:outline-2 data-[focus]:-outline-offset-2 data-[focus]:outline-white/25"
         )}
       >
         {selectedOption?.label || 'Select'}
         <ChevronDownIcon
-          className="group pointer-events-none size-4 fill-white/60"
+          className="group pointer-events-none size-4 fill-black/60 dark:fill-white/60"
           aria-hidden="true"
         />
       </ListboxButton>
@@ -62,7 +62,7 @@ export default function Select({
         anchor="bottom"
         transition
         className={clsx(
-          "w-[var(--button-width)] rounded-xl border-2 border-white/10 bg-background-dark text-white [--anchor-gap:var(--spacing-1)] focus:outline-none z-40",
+          "w-[var(--button-width)]  rounded-xl border-2 border-white/10 bg-background-dark text-white [--anchor-gap:var(--spacing-1)] focus:outline-none z-40",
           "transition duration-100 ease-in data-[leave]:data-[closed]:opacity-0 "
         )}
       >
