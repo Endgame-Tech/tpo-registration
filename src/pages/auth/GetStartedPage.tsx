@@ -201,7 +201,7 @@ export default GetStartedPage;
 function DisplayPasswordRules({ password = "" }) {
   const { is_ok, message } = validatePassword(password, password);
   return (
-    <div className="text-white text-sm flex gap-1 items-center py-2">
+    <div className="text-black dark:text-white text-sm flex gap-1 items-center py-2">
       {is_ok ? (
         <CheckCircleIcon className="fill-accent-green size-4" />
       ) : (

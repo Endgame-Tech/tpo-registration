@@ -39,7 +39,6 @@ export default function VoterRegistrationInformationPage() {
   const requiredFields = [
     { label: "Are you Registered to Vote?", value: "is_registered" },
     { label: "Preferred Method of Communication", value: "preferred_method_of_communication" },
-    { label: "Voter Registration Year", value: "registration_date" },
   ];
 
   const is_registered = [
@@ -70,6 +69,7 @@ export default function VoterRegistrationInformationPage() {
 
     try {
       const res = await fetch(`${API_BASE}/users/me/voter-registration`, {
+
         method: "PATCH",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
@@ -131,9 +131,16 @@ export default function VoterRegistrationInformationPage() {
             label="Voter Registration Year"
             options={getYears()}
             defaultSelected={profileDetails.registration_date}
-            onChange={(opt) => opt && updateProfileDetails({ registration_date: opt.value })}
-            required
+            onChange={(opt) => {
+              if (profileDetails.is_registered === "yes" && opt) {
+                updateProfileDetails({ registration_date: opt.value });
+              }
+            }}
+            required={profileDetails.is_registered === "yes"}
+            disabled={profileDetails.is_registered !== "yes"}
+            className={profileDetails.is_registered !== "yes" ? "opacity-50 cursor-not-allowed" : ""}
           />
+
 
           <MultiSelectComp
             label="Preferred Method of Communication"

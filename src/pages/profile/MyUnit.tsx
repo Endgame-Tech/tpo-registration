@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useUser } from "../../context/UserContext";
 import Toast from "../../components/Toast";
+import { FaWhatsapp } from "react-icons/fa";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 const FRONTEND_BASE = import.meta.env.VITE_FRONTEND_URL || "http://localhost:5173";
@@ -11,6 +12,26 @@ export default function MyUnit() {
   const [pendingInvites, setPendingInvites] = useState<any[]>([]);
   const [sending, setSending] = useState(false);
   const [resendingId, setResendingId] = useState<string | null>(null);
+
+  const ITEMS_PER_PAGE = 3;
+
+  const [unitPage, setUnitPage] = useState(1);
+  const [pendingPage, setPendingPage] = useState(1);
+
+  const totalUnitPages = Math.ceil(unitMembers.length / ITEMS_PER_PAGE);
+  const totalPendingPages = Math.ceil(pendingInvites.length / ITEMS_PER_PAGE);
+
+  const currentUnitMembers = unitMembers.slice(
+    (unitPage - 1) * ITEMS_PER_PAGE,
+    unitPage * ITEMS_PER_PAGE
+  );
+
+  const currentPendingInvites = pendingInvites.slice(
+    (pendingPage - 1) * ITEMS_PER_PAGE,
+    pendingPage * ITEMS_PER_PAGE
+  );
+
+
 
   const [emailInput, setEmailInput] = useState("");
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
@@ -191,6 +212,7 @@ export default function MyUnit() {
         </div>
       </div>
 
+
       {/* Pending Unit */}
       {pendingInvites.length > 0 && (
         <>
@@ -198,31 +220,39 @@ export default function MyUnit() {
           <div className="p-4 sm:p-6 px-4 sm:px-8 bg-background-light/10 rounded-3xl">
             <h3 className="text-lg sm:text-xl font-bold mb-6">Pending Unit</h3>
             <ul className="divide-y divide-gray-300 dark:divide-white/10">
-              {pendingInvites.map((invite) => (
-                <li key={invite._id} className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 py-4">
-                  <div className="flex flex-col">
-                    <span className="text-sm">{invite.email}</span>
-                    <span className="text-xs opacity-60">
-                      Invited on {new Date(invite.createdAt).toLocaleDateString()}
-                    </span>
+              {currentPendingInvites.map((invite) => (
+                <li key={invite._id} className="flex flex-col md:flex-row justify-between items-start gap-4 py-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-green-600 text-white flex items-center justify-center uppercase text-sm">
+                      {invite.email.charAt(0)}
+                    </div>
+                    <div>
+                      <p className="text-sm">{invite.email}</p>
+                      <p className="text-xs opacity-60">
+                        Invited on {new Date(invite.createdAt).toLocaleDateString()}
+                      </p>
+                    </div>
                   </div>
                   <button
                     onClick={() => resendInvite(invite._id)}
-                    className={`bg-green-500 text-white px-4 py-1 rounded-full text-sm hover:bg-green-600 ${resendingId === invite._id ? "opacity-50 cursor-not-allowed" : ""}`}
+                    className="bg-green-500 text-white px-4 py-1 rounded-full text-sm hover:bg-green-600 disabled:opacity-50"
                     disabled={resendingId === invite._id}
                   >
-                    {resendingId === invite._id ? (
-                      <svg className="animate-spin h-4 w-4 mx-auto" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                      </svg>
-                    ) : (
-                      "Resend Invite"
-                    )}
+                    {resendingId === invite._id ? "Resending..." : "Resend Invite"}
                   </button>
-
                 </li>
               ))}
+
+              <div className="flex justify-end py-2 items-center gap-2 mt-4 text-sm">
+                {pendingPage > 1 && (
+                  <button onClick={() => setPendingPage(pendingPage - 1)} className="underline">Previous</button>
+                )}
+                {pendingPage < totalPendingPages && (
+                  <button onClick={() => setPendingPage(pendingPage + 1)} className="underline">Next</button>
+                )}
+                <span className="ml-4">Page {pendingPage} of {totalPendingPages}</span>
+              </div>
+
             </ul>
           </div>
         </>
@@ -235,46 +265,55 @@ export default function MyUnit() {
           <div className="p-4 sm:p-6 px-4 sm:px-8 bg-background-light/10 rounded-3xl">
             <h3 className="text-lg sm:text-xl font-bold mb-6">My Unit Members</h3>
             <ul className="divide-y divide-gray-300 dark:divide-white/10">
-              {unitMembers.map((member, index) => {
+              {currentUnitMembers.map((member, index) => {
                 const phoneNumber = member.personalInfo?.phone_number || "";
                 const countryCode = member.personalInfo?.country_code || "+234";
 
-                // Format the phone number properly
                 let formattedPhone = phoneNumber.startsWith("0")
                   ? countryCode + phoneNumber.slice(1)
                   : countryCode + phoneNumber;
-
-                // Remove any "+" for wa.me link (it must not have "+" sign)
                 formattedPhone = formattedPhone.replace("+", "");
 
                 const whatsappLink = `https://wa.me/${formattedPhone}`;
 
                 return (
-                  <li key={index} className="py-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-                    <div className="flex flex-col md:flex-row w-full justify-between items-start md:items-center gap-2">
-                      <span className="capitalize">
-                        {phoneNumber || "(Still Onboarding)"}
-                      </span>
-                      <span className="text-sm">{member.email}</span>
-                      <span className="text-xs opacity-60">
-                        Joined {new Date(member.createdAt).toLocaleDateString()}
-                      </span>
+                  <li key={index} className="py-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div className="flex items-center w-full gap-3">
+                      <div className="w-8 h-8 rounded-full bg-green-600 text-white flex items-center justify-center uppercase text-sm">
+                        {(member.personalInfo?.user_name || member.email || "?")[0]}
+                      </div>
+                      <div className="flex flex-col md:flex-row justify-between w-full max-w-2xl">
+                        <p>{phoneNumber || "(Still Onboarding)"}</p>
+                        <p className="text-sm">{member.email}</p>
+                        <p className="text-xs opacity-60">Joined {new Date(member.createdAt).toLocaleDateString()}</p>
+                      </div>
+                    </div>
+                    <div className="flex">
                       {phoneNumber && (
                         <a
                           href={whatsappLink}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="bg-green-500 hover:bg-green-600 text-white text-sm px-4 py-2 rounded-full"
+                          className="bg-green-500 hover:bg-green-600 text-white text-sm px-6 py-2 rounded-full"
                         >
-                          Message on WhatsApp
+                          <FaWhatsapp size={20} />
                         </a>
                       )}
                     </div>
-
-
                   </li>
                 );
               })}
+
+              <div className="flex justify-end items-center gap-2 mt-4 py-2 text-sm">
+                {unitPage > 1 && (
+                  <button onClick={() => setUnitPage(unitPage - 1)} className="underline">Previous</button>
+                )}
+                {unitPage < totalUnitPages && (
+                  <button onClick={() => setUnitPage(unitPage + 1)} className="underline">Next</button>
+                )}
+                <span className="ml-4">Page {unitPage} of {totalUnitPages}</span>
+              </div>
+
             </ul>
           </div>
         </>

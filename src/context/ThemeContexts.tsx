@@ -19,11 +19,11 @@ type childrenProps = {
 
 
 export const ThemeProvider = ({ children }: childrenProps) => {
-  const [theme, setTheme] = useState<Theme>("dark");
+  const [theme, setTheme] = useState<Theme>("light");
   useEffect(() => {
-    document.documentElement.classList.toggle("dark", theme === "dark");
+    document.documentElement.classList.toggle("light", theme === "light");
   }, [])
-  
+
 
   const toggleTheme = () => {
     const newTheme = theme === "light" ? "dark" : "light";
